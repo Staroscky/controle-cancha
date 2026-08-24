@@ -1,6 +1,6 @@
 # 04 — UI: indicativo de consumação mínima
 
-**Status:** 📝 Planejado
+**Status:** ✅ Concluído
 
 Na lista de participantes ativos da partida, exibir "faltam R$ X para o mínimo" usando `calcularIndicativoConsumacao` (já implementada em `domain/rules`) — só exibição, não é lançamento nem é persistido (seção 7 de `regras.md`).
 

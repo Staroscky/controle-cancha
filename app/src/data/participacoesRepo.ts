@@ -1,3 +1,4 @@
+import { EQUIPE_IDS } from '../domain/types/Equipe'
 import type { Lado, Participacao } from '../domain/types/Participacao'
 import { getItem, setItem } from './storage'
 
@@ -35,5 +36,14 @@ export function registrarSaidaParticipacao(id: string): void {
   const participacoes = listarParticipacoes().map((p) =>
     p.id === id ? { ...p, saida: new Date().toISOString(), status: 'saiu' as const } : p,
   )
+  setItem(CHAVE, participacoes)
+}
+
+export function inverterEquipesDaPartida(partidaId: string): void {
+  const participacoes = listarParticipacoes().map((p) => {
+    if (p.partidaId !== partidaId) return p
+    const equipeInvertida = p.equipeId === EQUIPE_IDS.azul ? EQUIPE_IDS.amarela : EQUIPE_IDS.azul
+    return { ...p, equipeId: equipeInvertida }
+  })
   setItem(CHAVE, participacoes)
 }

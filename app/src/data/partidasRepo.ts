@@ -35,3 +35,8 @@ export function concluirPartida(id: string, equipeVencedoraId: string): void {
   )
   setItem(CHAVE, partidas)
 }
+
+export function limparHistoricoPartidas(): void {
+  const restantes = listarPartidas().filter((p) => p.status !== 'concluida')
+  setItem(CHAVE, restantes)
+}

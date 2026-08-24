@@ -635,11 +635,14 @@ A interface é dividida em 4 abas. Essa divisão é uma sugestão de UX — não
 - Monta a partida atual: adiciona clientes às equipes 🔵 Azul / 🟡 Amarela e, opcionalmente, a um lado (Cima/Baixo), respeitando os limites de 4 por lado / 8 por equipe (seção 2).
 - Só oferece para seleção clientes marcados como **presentes** (seção 3.1).
 - Permite entrada e saída de participantes durante a partida (seção 3) — sair da partida é independente de sair do estabelecimento.
+- Permite inverter as equipes da partida ativa de uma vez (quem está no Azul vai para o Amarela e vice-versa), preservando o lado de cada participante.
 - Ao concluir, o dono informa a equipe vencedora (🔵 ou 🟡). O sistema calcula automaticamente:
   - `Débito partida` (cobrança de derrota) para cada perdedor ativo.
   - `Crédito partida` (crédito de vitória) dividido entre os vencedores ativos.
   - (seção 7 e 8)
 - Exibe, para cada cliente ativo na partida, o indicativo calculado de consumação mínima (seção 7, "faltam R$ X para o mínimo"), sem afetar o saldo.
+- Mostra um histórico das partidas já concluídas (data, equipe vencedora, quantidade de participantes ativos, valor por cliente); cada item expande e mostra os participantes ativos agrupados por equipe. A partir de uma partida do histórico, é possível criar uma nova partida reaproveitando os mesmos clientes, repetindo a equipe e o lado exatos de cada um — usando os valores da configuração padrão atual (não os valores da partida antiga). Cliente que não está mais presente no estabelecimento é ignorado nessa cópia (seção 3.1).
+- É possível limpar o histórico (apagar os registros de partidas concluídas da lista). Isso não desfaz nenhum lançamento financeiro já gerado por essas partidas — créditos e débitos continuam valendo no saldo do cliente normalmente.
 
 ### Aba Consumo
 

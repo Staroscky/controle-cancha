@@ -1,0 +1,189 @@
+import { ChevronDown, ChevronUp } from 'lucide-react'
+import { useState } from 'react'
+import { toast } from 'sonner'
+import { listarParticipacoesPorPartida } from '@/data/participacoesRepo'
+import type { Cliente } from '@/domain/types/Cliente'
+import { EQUIPES } from '@/domain/types/Equipe'
+import type { Partida } from '@/domain/types/Partida'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/ui/components/ui/alert-dialog'
+import { Button } from '@/ui/components/ui/button'
+
+const formatoMoeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
+const formatoData = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
+
+type ResultadoCriarComParticipantes = {
+  partida: Partida | null
+  adicionados: number
+  ignorados: number
+}
+
+type HistoricoPartidasProps = {
+  historico: Partida[]
+  clientes: Cliente[]
+  partidaAtivaExiste: boolean
+  onCriarComParticipantes: (partidaId: string) => ResultadoCriarComParticipantes
+  onLimparHistorico: () => void
+}
+
+export function HistoricoPartidas({
+  historico,
+  clientes,
+  partidaAtivaExiste,
+  onCriarComParticipantes,
+  onLimparHistorico,
+}: HistoricoPartidasProps) {
+  const [expandidaId, setExpandidaId] = useState<string | null>(null)
+
+  if (historico.length === 0) return null
+
+  function handleCriarComParticipantes(partidaId: string) {
+    const { adicionados, ignorados } = onCriarComParticipantes(partidaId)
+
+    if (adicionados === 0) {
+      toast.error('Nenhum participante dessa partida está presente agora.')
+      return
+    }
+
+    toast.success(
+      ignorados > 0
+        ? `Partida criada com ${adicionados} participante(s). ${ignorados} de fora por estarem ausentes.`
+        : `Partida criada com ${adicionados} participante(s).`,
+    )
+  }
+
+  function handleLimparHistorico() {
+    onLimparHistorico()
+    setExpandidaId(null)
+    toast.success('Histórico de partidas limpo.')
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-muted-foreground">Histórico de partidas</h3>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button type="button" variant="ghost" size="sm">
+              Limpar histórico
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Limpar histórico de partidas?</AlertDialogTitle>
+              <AlertDialogDescription>
+                As {historico.length} partida(s) concluída(s) somem dessa lista. Os créditos e
+                débitos já lançados continuam valendo no saldo dos clientes — essa ação só limpa
+                o histórico, não desfaz cobrança nenhuma.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction variant="destructive" onClick={handleLimparHistorico}>
+                Limpar
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+
+      <div className="space-y-2">
+        {historico.map((partida) => {
+          const equipeVencedora = EQUIPES.find((e) => e.id === partida.equipeVencedoraId)
+          const participantes = listarParticipacoesPorPartida(partida.id).filter(
+            (p) => p.status === 'ativo',
+          )
+          const expandida = expandidaId === partida.id
+
+          return (
+            <div key={partida.id} className="rounded-md border text-sm">
+              <div className="flex flex-wrap items-center justify-between gap-2 p-3">
+                <button
+                  type="button"
+                  className="flex flex-1 items-center gap-1.5 text-left"
+                  onClick={() => setExpandidaId(expandida ? null : partida.id)}
+                >
+                  {expandida ? (
+                    <ChevronUp className="size-4 shrink-0 text-muted-foreground" />
+                  ) : (
+                    <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
+                  )}
+                  <span>
+                    <span className="font-medium">
+                      {equipeVencedora?.nome === 'Azul' ? '🔵' : '🟡'} {equipeVencedora?.nome}{' '}
+                      venceu
+                    </span>
+                    <span className="text-muted-foreground">
+                      {' '}
+                      · {formatoData.format(new Date(partida.dataHora))} · {participantes.length}{' '}
+                      participantes · {formatoMoeda.format(partida.valorPartidaPorCliente)}
+                      /cliente
+                    </span>
+                  </span>
+                </button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  disabled={partidaAtivaExiste}
+                  title={
+                    partidaAtivaExiste
+                      ? 'Conclua a partida em andamento antes de criar outra'
+                      : undefined
+                  }
+                  onClick={() => handleCriarComParticipantes(partida.id)}
+                >
+                  Nova partida com estes participantes
+                </Button>
+              </div>
+
+              {expandida && (
+                <div className="grid gap-3 border-t p-3 sm:grid-cols-2">
+                  {EQUIPES.map((equipe) => {
+                    const daEquipe = participantes.filter((p) => p.equipeId === equipe.id)
+                    return (
+                      <div key={equipe.id} className="space-y-1.5">
+                        <p className="text-xs font-medium text-muted-foreground">
+                          {equipe.nome === 'Azul' ? '🔵' : '🟡'} {equipe.nome} ({daEquipe.length})
+                        </p>
+                        {daEquipe.length === 0 ? (
+                          <p className="text-xs text-muted-foreground">Nenhum participante.</p>
+                        ) : (
+                          <ul className="space-y-1">
+                            {daEquipe.map((p) => {
+                              const cliente = clientes.find((c) => c.id === p.clienteId)
+                              return (
+                                <li
+                                  key={p.id}
+                                  className="rounded-md bg-muted px-2 py-1 text-xs"
+                                >
+                                  {cliente?.nome ?? 'Cliente removido'}
+                                  {p.lado && (
+                                    <span className="text-muted-foreground"> · {p.lado}</span>
+                                  )}
+                                </li>
+                              )
+                            })}
+                          </ul>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}

@@ -1,6 +1,6 @@
 # 07 — Testes unitários
 
-**Status:** 📝 Planejado
+**Status:** ✅ Concluído
 
 Testes para `prepararLancamentosFechamentoPartida` (tarefa 05) em `tests/domain/rules/`, seguindo a mesma convenção da feature 01 (parametrizados com `it.each`, import via alias `@/...`):
 

@@ -25,7 +25,7 @@ NN-nome-da-feature/
 | # | Feature | Status | Referência em `regras.md` |
 |---|---|---|---|
 | [01](01-clientes/spec.md) | Clientes | ✅ Concluído | seção 3.1, 12, 14.1 (Aba Clientes) |
-| [02](02-partida/spec.md) | Partida | 📝 Planejado | seções 2–9, 14.1 (Aba Partida) |
+| [02](02-partida/spec.md) | Partida | ✅ Concluído | seções 2–9, 14.1 (Aba Partida) |
 | 03 | Consumo | ⏳ Ainda não especificado | seção 10, 14.1 (Aba Consumo) |
 | 04 | Acerto | ⏳ Ainda não especificado | seções 11, 11.1, 13, 14.1 (Aba Acerto) |
 

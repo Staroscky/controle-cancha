@@ -1,6 +1,6 @@
 # 05 — Regra de fechamento de partida
 
-**Status:** 📝 Planejado
+**Status:** ✅ Concluído
 
 Falta uma peça de domínio: dado o conjunto de participações ativas de uma partida e a equipe vencedora, decidir quais lançamentos gerar. `calcularCreditoVitoria` já calcula o valor por vencedor — falta a função que separa participações ativas em vencedores/perdedores e monta a lista de lançamentos a persistir.
 

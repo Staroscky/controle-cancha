@@ -1,6 +1,6 @@
 # 02 — Hook de partida ativa
 
-**Status:** 📝 Planejado
+**Status:** ✅ Concluído
 
 `ui/hooks/usePartidaAtiva.ts`: encapsula a partida "em andamento" atual (se houver) e suas participações.
 

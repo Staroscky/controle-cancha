@@ -1,6 +1,6 @@
 # 02 — Partida
 
-**Status:** 📝 Planejado
+**Status:** ✅ Concluído
 
 ## Objetivo
 
@@ -20,6 +20,10 @@ Baseado nas seções 2 a 9 e 14.1 (Aba Partida) de `docs/regras.md`:
   - `Débito partida` (cobrança de derrota) = `valor_partida_por_cliente`, um por perdedor ativo.
   - `Crédito partida` (crédito de vitória) = crédito total ÷ vencedores ativos, dividido entre os vencedores ativos (`calcularCreditoVitoria`, já implementada — falta só a orquestração que gera e persiste os lançamentos).
   - Se `valor_partida_por_cliente` for R$ 0, nenhum lançamento de crédito/débito é gerado (seção 12).
+- **Histórico de partidas**: lista das partidas já concluídas (data, equipe vencedora, participantes ativos, valor por cliente), visível na própria aba Partida (adicionado na tarefa 08, depois da entrega inicial). Cada linha expande e mostra os participantes ativos agrupados por equipe.
+- **Reaproveitar participantes**: a partir de uma partida do histórico, criar uma nova partida com os mesmos clientes, repetindo equipe e lado exatos — usando os valores da configuração padrão atual, não os da partida antiga. Clientes que hoje estão ausentes são ignorados na cópia (tarefa 08).
+- **Limpar histórico**: apaga os registros de partidas concluídas da lista (com confirmação via `AlertDialog`). Não afeta os lançamentos financeiros já gerados — o saldo dos clientes permanece intacto (tarefa 08).
+- **Inverter equipes**: na partida ativa, troca todo mundo de time de uma vez (quem está no Azul vai para o Amarela e vice-versa), preservando o lado de cada um (tarefa 09).
 
 ## Fora de escopo
 

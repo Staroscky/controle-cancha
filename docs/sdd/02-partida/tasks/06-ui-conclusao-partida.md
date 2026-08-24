@@ -1,6 +1,6 @@
 # 06 — UI: conclusão da partida
 
-**Status:** 📝 Planejado
+**Status:** ✅ Concluído
 
 `AlertDialog` (ação importante e definitiva, seção 5 de `arquitetura.md`) para escolher a equipe vencedora e confirmar o fechamento.
 
