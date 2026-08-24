@@ -7,11 +7,11 @@ import { PartidaPage } from '@/ui/pages/PartidaPage'
 
 function App() {
   return (
-    <div className="mx-auto min-h-svh max-w-2xl p-4">
+    <div className="mx-auto min-h-svh max-w-7xl p-4">
       <h1 className="mb-4 text-2xl font-bold">Controle de Bocha</h1>
 
       <Tabs defaultValue="clientes">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full max-w-md grid-cols-4">
           <TabsTrigger value="clientes">Clientes</TabsTrigger>
           <TabsTrigger value="partida">Partida</TabsTrigger>
           <TabsTrigger value="consumo">Consumo</TabsTrigger>

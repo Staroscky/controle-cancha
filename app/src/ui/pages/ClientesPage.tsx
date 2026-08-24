@@ -15,12 +15,14 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/ui/components/ui/sheet'
+import { QuadroPresenca } from '@/ui/components/QuadroPresenca'
 import { useClientes } from '@/ui/hooks/useClientes'
 
 const formatoMoeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
 
 export function ClientesPage() {
-  const { clientes, cadastrar, definirPresenca } = useClientes()
+  const { clientes, grupos, cadastrar, definirPresenca, agrupar, desagrupar, renomearGrupoDoBloco } =
+    useClientes()
   const [nome, setNome] = useState('')
   const [aberto, setAberto] = useState(false)
   const lancamentos = listarLancamentos()
@@ -68,40 +70,61 @@ export function ClientesPage() {
         </Sheet>
       </div>
 
-      {clientes.length === 0 && (
-        <p className="text-sm text-muted-foreground">Nenhum cliente cadastrado ainda.</p>
-      )}
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
+        <div className="space-y-2">
+          {clientes.length === 0 && (
+            <p className="text-sm text-muted-foreground">Nenhum cliente cadastrado ainda.</p>
+          )}
 
-      <ul className="space-y-2">
-        {clientes.map((cliente) => {
-          const saldo = calcularSaldo(lancamentos, cliente.id)
-          return (
-            <li
-              key={cliente.id}
-              className="flex items-center justify-between rounded-md border p-3"
-            >
-              <div className="flex items-center gap-2">
-                <span>{cliente.nome}</span>
-                <Badge variant={cliente.presente ? 'default' : 'secondary'}>
-                  {cliente.presente ? 'Presente' : 'Ausente'}
-                </Badge>
-                {saldo !== 0 && (
-                  <span className={saldo < 0 ? 'text-destructive' : 'text-emerald-600'}>
-                    {formatoMoeda.format(saldo)}
-                  </span>
-                )}
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => definirPresenca(cliente.id, !cliente.presente)}
-              >
-                {cliente.presente ? 'Marcar saída' : 'Marcar chegada'}
-              </Button>
-            </li>
-          )
-        })}
-      </ul>
+          <ul className="space-y-2">
+            {clientes.map((cliente) => {
+              const saldo = calcularSaldo(lancamentos, cliente.id)
+              return (
+                <li
+                  key={cliente.id}
+                  className="flex items-center justify-between rounded-md border p-3"
+                >
+                  <div className="flex items-center gap-2">
+                    <span>{cliente.nome}</span>
+                    <Badge variant={cliente.presente ? 'default' : 'secondary'}>
+                      {cliente.presente ? 'Presente' : 'Ausente'}
+                    </Badge>
+                    {saldo !== 0 && (
+                      <span className={saldo < 0 ? 'text-destructive' : 'text-emerald-600'}>
+                        {formatoMoeda.format(saldo)}
+                      </span>
+                    )}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => definirPresenca(cliente.id, !cliente.presente)}
+                  >
+                    {cliente.presente ? 'Marcar saída' : 'Marcar chegada'}
+                  </Button>
+                </li>
+              )
+            })}
+          </ul>
+        </div>
+
+        <div className="space-y-2">
+          <h3 className="text-sm font-semibold text-muted-foreground">
+            Presentes no estabelecimento
+          </h3>
+          <p className="text-xs text-muted-foreground">
+            Arraste um cliente sobre outro para agrupar (ex.: famílias). Solte fora de um
+            grupo para desvincular.
+          </p>
+          <QuadroPresenca
+            clientes={clientes}
+            grupos={grupos}
+            onAgrupar={agrupar}
+            onDesagrupar={desagrupar}
+            onRenomearGrupo={renomearGrupoDoBloco}
+          />
+        </div>
+      </div>
     </div>
   )
 }

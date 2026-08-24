@@ -1,12 +1,22 @@
 import { useCallback, useState } from 'react'
-import { adicionarCliente, definirPresencaCliente, listarClientes } from '@/data/clientesRepo'
+import {
+  adicionarCliente,
+  agruparClientes,
+  definirPresencaCliente,
+  listarClientes,
+  removerClienteDoGrupo,
+} from '@/data/clientesRepo'
+import { listarGrupos, renomearGrupo } from '@/data/gruposRepo'
 import type { Cliente } from '@/domain/types/Cliente'
+import type { Grupo } from '@/domain/types/Grupo'
 
 export function useClientes() {
   const [clientes, setClientes] = useState<Cliente[]>(() => listarClientes())
+  const [grupos, setGrupos] = useState<Grupo[]>(() => listarGrupos())
 
   const recarregar = useCallback(() => {
     setClientes(listarClientes())
+    setGrupos(listarGrupos())
   }, [])
 
   const cadastrar = useCallback(
@@ -26,5 +36,37 @@ export function useClientes() {
     [recarregar],
   )
 
-  return { clientes, cadastrar, definirPresenca }
+  const agrupar = useCallback(
+    (idArrastado: string, idDestino: string) => {
+      agruparClientes(idArrastado, idDestino)
+      recarregar()
+    },
+    [recarregar],
+  )
+
+  const desagrupar = useCallback(
+    (id: string) => {
+      removerClienteDoGrupo(id)
+      recarregar()
+    },
+    [recarregar],
+  )
+
+  const renomearGrupoDoBloco = useCallback(
+    (grupoId: string, nome: string) => {
+      renomearGrupo(grupoId, nome)
+      recarregar()
+    },
+    [recarregar],
+  )
+
+  return {
+    clientes,
+    grupos,
+    cadastrar,
+    definirPresenca,
+    agrupar,
+    desagrupar,
+    renomearGrupoDoBloco,
+  }
 }

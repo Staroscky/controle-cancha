@@ -1,5 +1,6 @@
 import { normalizarNomeCliente } from '../domain/rules/normalizarNomeCliente'
 import type { Cliente } from '../domain/types/Cliente'
+import { criarGrupo, removerGrupo } from './gruposRepo'
 import { getItem, setItem } from './storage'
 
 const CHAVE = 'bocha:clientes'
@@ -34,8 +35,66 @@ export function adicionarCliente(nome: string): Cliente {
 }
 
 export function definirPresencaCliente(id: string, presente: boolean): void {
-  const clientes = listarClientes().map((c) =>
-    c.id === id ? { ...c, presente } : c,
-  )
+  let clientes = listarClientes().map((c) => (c.id === id ? { ...c, presente } : c))
+
+  const clienteAlterado = clientes.find((c) => c.id === id)
+  const grupoId = clienteAlterado?.grupoId
+  if (!presente && grupoId) {
+    const aindaTemPresente = clientes.some((c) => c.grupoId === grupoId && c.presente)
+    if (!aindaTemPresente) {
+      clientes = clientes.map((c) => (c.grupoId === grupoId ? { ...c, grupoId: undefined } : c))
+      removerGrupo(grupoId)
+    }
+  }
+
   setItem(CHAVE, clientes)
+}
+
+export function agruparClientes(idArrastado: string, idDestino: string): void {
+  if (idArrastado === idDestino) return
+
+  const clientes = listarClientes()
+  const arrastado = clientes.find((c) => c.id === idArrastado)
+  const destino = clientes.find((c) => c.id === idDestino)
+  if (!arrastado || !destino) return
+
+  const grupoAntigo = arrastado.grupoId
+  const grupoId = destino.grupoId ?? criarGrupo().id
+
+  let atualizados = clientes.map((c) =>
+    c.id === idArrastado || c.id === idDestino ? { ...c, grupoId } : c,
+  )
+
+  if (grupoAntigo && grupoAntigo !== grupoId) {
+    const restantes = atualizados.filter((c) => c.grupoId === grupoAntigo)
+    if (restantes.length <= 1) {
+      atualizados = atualizados.map((c) =>
+        c.grupoId === grupoAntigo ? { ...c, grupoId: undefined } : c,
+      )
+      removerGrupo(grupoAntigo)
+    }
+  }
+
+  setItem(CHAVE, atualizados)
+}
+
+export function removerClienteDoGrupo(id: string): void {
+  const clientes = listarClientes()
+  const cliente = clientes.find((c) => c.id === id)
+  const grupoId = cliente?.grupoId
+  if (!grupoId) return
+
+  const atualizados = clientes.map((c) => (c.id === id ? { ...c, grupoId: undefined } : c))
+
+  const restantes = atualizados.filter((c) => c.grupoId === grupoId)
+  if (restantes.length <= 1) {
+    const limpos = atualizados.map((c) =>
+      c.grupoId === grupoId ? { ...c, grupoId: undefined } : c,
+    )
+    setItem(CHAVE, limpos)
+    removerGrupo(grupoId)
+    return
+  }
+
+  setItem(CHAVE, atualizados)
 }
