@@ -529,7 +529,10 @@ Antes de salvar ou comparar um nome de cliente:
 
 1. Remove espaços no início e no fim (trim).
 2. Colapsa espaços duplos (ou mais) entre palavras em um único espaço.
-3. Só depois disso verifica unicidade — "João Silva", " João Silva " e "João  Silva" (espaço duplo) são tratados como o **mesmo nome** e não podem gerar dois cadastros.
+3. Aplica a convenção de capitalização: primeira letra de cada palavra em maiúscula, resto em minúscula — exceto preposições (`da`, `de`, `do`, `das`, `dos`), que ficam sempre em minúsculo, mesmo se digitadas em maiúsculo. A primeira palavra do nome é sempre capitalizada, mesmo que coincida com uma preposição.
+4. Só depois disso verifica unicidade (comparação case-insensitive) — "João Silva", " joão SILVA " e "João  Silva" (espaço duplo) são tratados como o **mesmo nome** e não podem gerar dois cadastros.
+
+Exemplo: `"joao DA silva"` → `"Joao da Silva"`.
 
 ### Regra: `partida_id` obrigatório ou não em `lancamentos_financeiros`
 

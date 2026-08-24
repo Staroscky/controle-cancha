@@ -42,6 +42,24 @@ src/
 - `data/` não decide regra de negócio — só guarda/recupera dados. As contas (crédito de vitória, saldo etc.) vêm de `domain/rules`.
 - `ui/` nunca chama `localStorage` diretamente, só as funções de `data/`.
 
+### 2.1 Testes
+
+Testes ficam fora de `src/`, numa pasta `tests/` na raiz do projeto que espelha a estrutura de `src/` (convenção comum em projetos Vite/Vitest — evita misturar código de teste com código de produção no mesmo diretório):
+
+```text
+tests/
+└── domain/
+    └── rules/
+        ├── calcularSaldo.test.ts
+        ├── calcularCreditoVitoria.test.ts
+        └── ...
+```
+
+- Framework: **Vitest**, configurado em `vite.config.ts` (reaproveita alias `@` e plugins).
+- Os testes importam o código de produção pelo alias `@/...` (ex.: `@/domain/rules/calcularSaldo`), nunca por caminho relativo cruzando de `tests/` para `src/`.
+- Prioridade de cobertura: `domain/rules`, por serem funções puras e o coração da lógica de negócio (seções 7 a 9 de `regras.md`).
+- Comandos: `npm run test` (roda uma vez) e `npm run test:watch` (modo watch).
+
 ---
 
 ## 3. Princípio de simplicidade (sem abstrações desnecessárias)
