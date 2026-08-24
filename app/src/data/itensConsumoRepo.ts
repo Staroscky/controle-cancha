@@ -12,3 +12,12 @@ export function adicionarItemConsumo(nome: string, valor: number): ItemConsumo {
   setItem(CHAVE, [...listarItensConsumo(), item])
   return item
 }
+
+export function editarItemConsumo(id: string, nome: string, valor: number): void {
+  const itens = listarItensConsumo().map((i) => (i.id === id ? { ...i, nome, valor } : i))
+  setItem(CHAVE, itens)
+}
+
+export function removerItemConsumo(id: string): void {
+  setItem(CHAVE, listarItensConsumo().filter((i) => i.id !== id))
+}

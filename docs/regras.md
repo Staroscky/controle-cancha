@@ -313,6 +313,8 @@ Independentemente de vitória ou derrota, qualquer cliente cujo consumo real na 
 
 O dono pode cadastrar previamente os itens mais comuns numa tabela `itens_consumo` (nome + valor), tipo uma planilha de preços — assim, na hora de lançar, ele só seleciona o item da lista em vez de digitar tudo de novo. Também dá pra lançar um item avulso (digitando descrição e valor na hora) para o que não está cadastrado.
 
+Itens do catálogo podem ser editados (nome e valor, já que os preços mudam com o tempo) ou removidos a qualquer momento. Editar ou remover um item do catálogo não altera lançamentos de consumo já feitos com ele — a descrição e o valor de cada lançamento são gravados no momento do lançamento, independentes do cadastro.
+
 ```text
 itens_consumo
 ├── id
