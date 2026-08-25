@@ -1,8 +1,7 @@
-import { Trash2Icon } from 'lucide-react'
+import { Pencil, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { listarClientes } from '@/data/clientesRepo'
-import type { ItemConsumo } from '@/domain/types/ItemConsumo'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -12,9 +11,18 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from '@/ui/components/ui/alert-dialog'
 import { Button } from '@/ui/components/ui/button'
-import { EditarItemConsumoSheet } from '@/ui/components/EditarItemConsumoSheet'
+import { Input } from '@/ui/components/ui/input'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/ui/components/ui/table'
 import { LancarConsumoSheet } from '@/ui/components/LancarConsumoSheet'
 import { NovoItemConsumoSheet } from '@/ui/components/NovoItemConsumoSheet'
 import { useConsumo } from '@/ui/hooks/useConsumo'
@@ -25,13 +33,43 @@ export function ConsumoPage() {
   const { itens, cadastrarItem, editarItem, removerItem, lancar } = useConsumo()
   const clientes = listarClientes()
   const existeClientePresente = clientes.some((c) => c.presente)
-  const [itemParaRemover, setItemParaRemover] = useState<ItemConsumo | null>(null)
+  const [editandoId, setEditandoId] = useState<string | null>(null)
+  const [nomeEdicao, setNomeEdicao] = useState('')
+  const [valorEdicao, setValorEdicao] = useState('')
+  const [filtro, setFiltro] = useState('')
+  const itensFiltrados = itens.filter((item) =>
+    item.nome.toLowerCase().includes(filtro.trim().toLowerCase()),
+  )
 
-  function handleConfirmarRemocao() {
-    if (!itemParaRemover) return
-    removerItem(itemParaRemover.id)
+  function iniciarEdicao(id: string, nomeAtual: string, valorAtual: number) {
+    setEditandoId(id)
+    setNomeEdicao(nomeAtual)
+    setValorEdicao(String(valorAtual))
+  }
+
+  function confirmarEdicao() {
+    if (!editandoId) return
+
+    const valorNumerico = Number(valorEdicao)
+
+    if (!nomeEdicao.trim()) {
+      toast.error('Informe o nome do item.')
+      return
+    }
+
+    if (Number.isNaN(valorNumerico) || valorNumerico < 0) {
+      toast.error('Informe um valor válido e não negativo.')
+      return
+    }
+
+    editarItem(editandoId, nomeEdicao.trim(), valorNumerico)
+    toast.success('Item atualizado.')
+    setEditandoId(null)
+  }
+
+  function handleRemover(id: string) {
+    removerItem(id)
     toast.success('Item removido do catálogo.')
-    setItemParaRemover(null)
   }
 
   return (
@@ -53,50 +91,127 @@ export function ConsumoPage() {
       )}
 
       <div className="space-y-2">
-        <h3 className="text-sm font-semibold text-muted-foreground">Catálogo de itens</h3>
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="text-sm font-semibold text-muted-foreground">Catálogo de itens</h3>
+          <Input
+            placeholder="Filtrar por nome..."
+            value={filtro}
+            onChange={(e) => setFiltro(e.target.value)}
+            className="h-8 max-w-48"
+          />
+        </div>
+
         {itens.length === 0 && (
           <p className="text-sm text-muted-foreground">Nenhum item cadastrado ainda.</p>
         )}
-        <ul className="space-y-2">
-          {itens.map((item) => (
-            <li key={item.id} className="flex items-center justify-between rounded-md border p-3">
-              <span>{item.nome}</span>
-              <div className="flex items-center gap-2">
-                <span className="text-muted-foreground">{formatoMoeda.format(item.valor)}</span>
-                <EditarItemConsumoSheet item={item} onEditar={editarItem} />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-xs"
-                  title="Remover item"
-                  onClick={() => setItemParaRemover(item)}
-                >
-                  <Trash2Icon />
-                </Button>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </div>
 
-      <AlertDialog
-        open={!!itemParaRemover}
-        onOpenChange={(open) => !open && setItemParaRemover(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remover item do catálogo?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {itemParaRemover?.nome ?? 'Este item'} deixará de aparecer na lista de itens do
-              catálogo. Lançamentos de consumo já feitos com ele não são afetados.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmarRemocao}>Remover</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        {itens.length > 0 && itensFiltrados.length === 0 && (
+          <p className="text-sm text-muted-foreground">Nenhum item encontrado para "{filtro}".</p>
+        )}
+
+        {itensFiltrados.length > 0 && (
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nome</TableHead>
+                  <TableHead className="text-right">Valor</TableHead>
+                  <TableHead className="w-0" />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {itensFiltrados.map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell>
+                      {editandoId === item.id ? (
+                        <Input
+                          autoFocus
+                          value={nomeEdicao}
+                          onChange={(e) => setNomeEdicao(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') confirmarEdicao()
+                            if (e.key === 'Escape') setEditandoId(null)
+                          }}
+                          className="h-8"
+                        />
+                      ) : (
+                        <span className="truncate">{item.nome}</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {editandoId === item.id ? (
+                        <Input
+                          type="number"
+                          min={0}
+                          step="0.01"
+                          value={valorEdicao}
+                          onChange={(e) => setValorEdicao(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') confirmarEdicao()
+                            if (e.key === 'Escape') setEditandoId(null)
+                          }}
+                          className="ml-auto h-8 w-28"
+                        />
+                      ) : (
+                        <span className="text-muted-foreground">
+                          {formatoMoeda.format(item.valor)}
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center justify-end gap-1">
+                        {editandoId === item.id ? (
+                          <Button type="button" size="sm" onClick={confirmarEdicao}>
+                            Salvar
+                          </Button>
+                        ) : (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            title="Editar item"
+                            onClick={() => iniciarEdicao(item.id, item.nome, item.valor)}
+                          >
+                            <Pencil className="size-4" />
+                          </Button>
+                        )}
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon-sm"
+                              className="text-destructive hover:text-destructive"
+                              title="Remover item"
+                            >
+                              <Trash2 className="size-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Remover item do catálogo?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                "{item.nome}" deixará de aparecer na lista de itens do catálogo.
+                                Lançamentos de consumo já feitos com ele não são afetados.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleRemover(item.id)}>
+                                Remover
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

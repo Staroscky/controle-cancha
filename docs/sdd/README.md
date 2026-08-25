@@ -27,4 +27,4 @@ NN-nome-da-feature/
 | [01](01-clientes/spec.md) | Clientes | ✅ Concluído | seção 3.1, 12, 14.1 (Aba Clientes) |
 | [02](02-partida/spec.md) | Partida | ✅ Concluído | seções 2–9, 14.1 (Aba Partida) |
 | [03](03-consumo/spec.md) | Consumo | ✅ Concluído | seção 10, 14.1 (Aba Consumo) |
-| [04](04-acerto/spec.md) | Acerto | ✅ Concluído | seções 11, 11.1, 13, 14.1 (Aba Acerto) |
+| [04](04-acerto/spec.md) | Comandas (Acerto) | ✅ Concluído | seções 11, 11.1, 13, 14.1 (Aba Comandas) |

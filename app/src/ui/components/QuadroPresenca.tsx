@@ -24,28 +24,10 @@ export function QuadroPresenca({
 }: QuadroPresencaProps) {
   const presentes = useMemo(() => clientes.filter((c) => c.presente), [clientes])
 
-  const blocos = useMemo<Bloco[]>(() => {
-    const porGrupo = new Map<string, Cliente[]>()
-    const solo: Bloco[] = []
-
-    for (const cliente of presentes) {
-      if (!cliente.grupoId) {
-        solo.push({ membros: [cliente] })
-        continue
-      }
-      const membros = porGrupo.get(cliente.grupoId) ?? []
-      membros.push(cliente)
-      porGrupo.set(cliente.grupoId, membros)
-    }
-
-    const agrupados: Bloco[] = Array.from(porGrupo.entries()).map(([grupoId, membros]) => ({
-      grupoId,
-      nome: grupos.find((g) => g.id === grupoId)?.nome,
-      membros,
-    }))
-
-    return [...agrupados, ...solo]
-  }, [presentes, grupos])
+  const blocos = useMemo<Bloco[]>(
+    () => agruparClientesPorGrupo(presentes, grupos),
+    [presentes, grupos],
+  )
 
   if (presentes.length === 0) {
     return (

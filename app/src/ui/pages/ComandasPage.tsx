@@ -1,46 +1,58 @@
-import { ExtratoClienteDialog } from '@/ui/components/ExtratoClienteDialog'
-import { RegistrarPagamentoSheet } from '@/ui/components/RegistrarPagamentoSheet'
-import { useAcerto, type ItemSaldoCliente } from '@/ui/hooks/useAcerto'
+import { ChevronDown } from 'lucide-react'
+import { useState } from 'react'
+import { agruparClientesPorGrupo, type Bloco } from '@/domain/rules/agruparClientesPorGrupo'
+import { ComandaBloco } from '@/ui/components/ComandaBloco'
+import { useComandas } from '@/ui/hooks/useComandas'
+import { cn } from '@/ui/lib/utils'
 
-const formatoMoeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
+function chaveDoBloco(bloco: Bloco) {
+  return bloco.grupoId ?? bloco.membros[0].id
+}
 
-export function AcertoPage() {
-  const { clientes, extratoDoCliente, pendencias, emDia, registrarPagamento, marcarSaida } =
-    useAcerto()
+export function ComandasPage() {
+  const {
+    clientes,
+    grupos,
+    saldoDoCliente,
+    extratoDoCliente,
+    registrarPagamento,
+    registrarPagamentoGrupo,
+    marcarSaida,
+    marcarSaidaGrupo,
+  } = useComandas()
 
-  function renderItem(item: ItemSaldoCliente) {
+  const [expandidoId, setExpandidoId] = useState<string | null>(null)
+  const [outrasAbertas, setOutrasAbertas] = useState(false)
+
+  function toggle(chave: string) {
+    setExpandidoId((atual) => (atual === chave ? null : chave))
+  }
+
+  const presentes = clientes.filter((c) => c.presente)
+  const blocosPresentes = agruparClientesPorGrupo(presentes, grupos)
+  const ausentesComSaldo = clientes.filter((c) => !c.presente && saldoDoCliente(c.id) !== 0)
+
+  function renderBloco(bloco: Bloco) {
+    const chave = chaveDoBloco(bloco)
     return (
-      <li
-        key={item.cliente.id}
-        className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3"
-      >
-        <div className="flex items-center gap-2">
-          <span>{item.cliente.nome}</span>
-          <span className={item.saldo < 0 ? 'text-destructive' : 'text-emerald-600'}>
-            {formatoMoeda.format(item.saldo)}
-          </span>
-        </div>
-        <div className="flex gap-2">
-          <ExtratoClienteDialog
-            cliente={item.cliente}
-            lancamentos={extratoDoCliente(item.cliente.id)}
-          />
-          {item.saldo < 0 && (
-            <RegistrarPagamentoSheet
-              cliente={item.cliente}
-              saldo={item.saldo}
-              onRegistrar={registrarPagamento}
-              onSugerirSaida={marcarSaida}
-            />
-          )}
-        </div>
-      </li>
+      <ComandaBloco
+        key={chave}
+        bloco={bloco}
+        expandido={expandidoId === chave}
+        onToggle={() => toggle(chave)}
+        saldoDoCliente={saldoDoCliente}
+        extratoDoCliente={extratoDoCliente}
+        onRegistrarPagamento={registrarPagamento}
+        onRegistrarPagamentoGrupo={registrarPagamentoGrupo}
+        onMarcarSaida={marcarSaida}
+        onMarcarSaidaGrupo={marcarSaidaGrupo}
+      />
     )
   }
 
   return (
     <div className="space-y-6">
-      <h2 className="text-lg font-semibold">Acerto</h2>
+      <h2 className="text-lg font-semibold">Comandas</h2>
 
       {clientes.length === 0 && (
         <p className="text-sm text-muted-foreground">Nenhum cliente cadastrado ainda.</p>
@@ -49,22 +61,34 @@ export function AcertoPage() {
       {clientes.length > 0 && (
         <>
           <div className="space-y-2">
-            <h3 className="text-sm font-semibold text-muted-foreground">Pendências</h3>
-            {pendencias.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Nenhuma pendência — todo mundo em dia.</p>
+            <h3 className="text-sm font-semibold text-muted-foreground">Presentes</h3>
+            {blocosPresentes.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhum cliente presente no momento.</p>
             ) : (
-              <ul className="space-y-2">{pendencias.map((item) => renderItem(item))}</ul>
+              <div className="space-y-2">{blocosPresentes.map(renderBloco)}</div>
             )}
           </div>
 
-          <div className="space-y-2">
-            <h3 className="text-sm font-semibold text-muted-foreground">Em dia</h3>
-            {emDia.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Nenhum cliente em dia no momento.</p>
-            ) : (
-              <ul className="space-y-2">{emDia.map((item) => renderItem(item))}</ul>
-            )}
-          </div>
+          {ausentesComSaldo.length > 0 && (
+            <div className="space-y-2">
+              <button
+                type="button"
+                onClick={() => setOutrasAbertas((atual) => !atual)}
+                className="flex items-center gap-1 text-sm font-semibold text-muted-foreground"
+              >
+                <ChevronDown
+                  className={cn('size-4 transition-transform', outrasAbertas && 'rotate-180')}
+                />
+                Outras pendências ({ausentesComSaldo.length})
+              </button>
+
+              {outrasAbertas && (
+                <div className="space-y-2">
+                  {ausentesComSaldo.map((cliente) => renderBloco({ membros: [cliente] }))}
+                </div>
+              )}
+            </div>
+          )}
         </>
       )}
     </div>

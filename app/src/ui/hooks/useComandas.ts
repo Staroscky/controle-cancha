@@ -1,31 +1,32 @@
 import { useCallback, useState } from 'react'
 import { definirPresencaCliente, listarClientes } from '@/data/clientesRepo'
+import { listarGrupos } from '@/data/gruposRepo'
 import { adicionarLancamento, listarLancamentos, listarLancamentosPorCliente } from '@/data/lancamentosRepo'
 import { calcularSaldo } from '@/domain/rules/calcularSaldo'
 import { prepararLancamentoPagamento } from '@/domain/rules/prepararLancamentoPagamento'
+import {
+  prepararLancamentosPagamentoGrupo,
+  type ItemPagamentoGrupo,
+} from '@/domain/rules/prepararLancamentosPagamentoGrupo'
 import type { Cliente } from '@/domain/types/Cliente'
+import type { Grupo } from '@/domain/types/Grupo'
 import type { LancamentoFinanceiro } from '@/domain/types/LancamentoFinanceiro'
 
-export type ItemSaldoCliente = {
-  cliente: Cliente
-  saldo: number
-}
-
-export function useAcerto() {
+export function useComandas() {
   const [clientes, setClientes] = useState<Cliente[]>(() => listarClientes())
+  const [grupos, setGrupos] = useState<Grupo[]>(() => listarGrupos())
   const [lancamentos, setLancamentos] = useState<LancamentoFinanceiro[]>(() => listarLancamentos())
 
   const recarregar = useCallback(() => {
     setClientes(listarClientes())
+    setGrupos(listarGrupos())
     setLancamentos(listarLancamentos())
   }, [])
 
-  const itens: ItemSaldoCliente[] = clientes.map((cliente) => ({
-    cliente,
-    saldo: calcularSaldo(lancamentos, cliente.id),
-  }))
-  const pendencias = itens.filter((item) => item.saldo !== 0)
-  const emDia = itens.filter((item) => item.saldo === 0)
+  const saldoDoCliente = useCallback(
+    (clienteId: string) => calcularSaldo(lancamentos, clienteId),
+    [lancamentos],
+  )
 
   const extratoDoCliente = useCallback((clienteId: string) => {
     return listarLancamentosPorCliente(clienteId)
@@ -43,6 +44,18 @@ export function useAcerto() {
     [recarregar],
   )
 
+  const registrarPagamentoGrupo = useCallback(
+    (itens: ItemPagamentoGrupo[], descricao: string): boolean => {
+      const novosLancamentos = prepararLancamentosPagamentoGrupo(itens, descricao)
+      if (novosLancamentos.length === 0) return false
+
+      novosLancamentos.forEach(adicionarLancamento)
+      recarregar()
+      return true
+    },
+    [recarregar],
+  )
+
   const marcarSaida = useCallback(
     (clienteId: string) => {
       definirPresencaCliente(clienteId, false)
@@ -51,13 +64,23 @@ export function useAcerto() {
     [recarregar],
   )
 
+  const marcarSaidaGrupo = useCallback(
+    (clienteIds: string[]) => {
+      clienteIds.forEach((clienteId) => definirPresencaCliente(clienteId, false))
+      recarregar()
+    },
+    [recarregar],
+  )
+
   return {
     clientes,
+    grupos,
     lancamentos,
-    pendencias,
-    emDia,
+    saldoDoCliente,
     extratoDoCliente,
     registrarPagamento,
+    registrarPagamentoGrupo,
     marcarSaida,
+    marcarSaidaGrupo,
   }
 }

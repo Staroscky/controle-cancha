@@ -34,6 +34,44 @@ export function adicionarCliente(nome: string): Cliente {
   return cliente
 }
 
+export function renomearCliente(id: string, nome: string): void {
+  const nomeNormalizado = normalizarNomeCliente(nome)
+  const clientes = listarClientes()
+
+  const jaExiste = clientes.some(
+    (c) => c.id !== id && c.nome.toLowerCase() === nomeNormalizado.toLowerCase(),
+  )
+  if (jaExiste) {
+    throw new Error(`Já existe um cliente cadastrado como "${nomeNormalizado}".`)
+  }
+
+  const atualizados = clientes.map((c) => (c.id === id ? { ...c, nome: nomeNormalizado } : c))
+  setItem(CHAVE, atualizados)
+}
+
+export function removerCliente(id: string): void {
+  const clientes = listarClientes()
+  const cliente = clientes.find((c) => c.id === id)
+  if (!cliente) return
+
+  const grupoId = cliente.grupoId
+  const restantes = clientes.filter((c) => c.id !== id)
+
+  if (grupoId) {
+    const aindaTemNoGrupo = restantes.filter((c) => c.grupoId === grupoId)
+    if (aindaTemNoGrupo.length <= 1) {
+      const limpos = restantes.map((c) =>
+        c.grupoId === grupoId ? { ...c, grupoId: undefined } : c,
+      )
+      setItem(CHAVE, limpos)
+      removerGrupo(grupoId)
+      return
+    }
+  }
+
+  setItem(CHAVE, restantes)
+}
+
 export function definirPresencaCliente(id: string, presente: boolean): void {
   let clientes = listarClientes().map((c) => (c.id === id ? { ...c, presente } : c))
 

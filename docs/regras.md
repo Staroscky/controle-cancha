@@ -655,12 +655,15 @@ A interface é dividida em 4 abas. Essa divisão é uma sugestão de UX — não
 - Gera um lançamento de `Consumo` por cliente selecionado, rateando o valor se for mais de um (seção 10).
 - O `partida_id` do lançamento é preenchido automaticamente se o cliente estiver ativo em alguma partida no momento; senão fica nulo (consumo fora de partida).
 
-### Aba Acerto
+### Aba Comandas
 
-- Mostra o extrato por partida, por cliente ou o saldo consolidado de todos os clientes (seção 11).
-- Separa visualmente **pendências** (saldo ≠ 0) de **clientes em dia** (saldo = 0) — independente de estarem presentes ou ausentes.
-- Ação "Registrar pagamento" em um cliente com saldo pendente: abre um campo com o valor sugerido (o saldo devedor em módulo, editável para pagamento parcial) e gera um lançamento de `Pagamento` (seção 11.1).
-- Depois de registrar o pagamento, sugere marcar o cliente como "saiu do estabelecimento" (ação opcional, um clique).
+- Primeiro bloco: **presentes no estabelecimento**, exibidos agrupados exatamente como foram organizados na Aba Clientes (grupos por `grupo_id`, ex.: uma família na mesma mesa) — clientes sem grupo aparecem sozinhos.
+- Cada cliente/grupo começa **recolhido**, mostrando só o(s) nome(s), sem valor. O saldo e as ações só aparecem ao **expandir** aquela linha — e só uma linha fica expandida por vez em toda a tela, para que, ao acertar com um cliente ou grupo, outras pessoas por perto não vejam o saldo alheio.
+- Ao expandir um grupo, cada membro aparece com seu saldo individual e ações individuais (extrato, "Registrar pagamento"), mais a opção **"Pagar grupo"**: abre uma revisão com **um único campo de valor** (sugerido = soma das dívidas do grupo, editável), não um campo por pessoa. Ao confirmar, o valor informado é abatido **de quem deve mais para quem deve menos**: quita inteiro quem deve mais primeiro, usa o restante no próximo, e assim por diante — se o valor não cobrir todo mundo, quem deve menos fica com pagamento parcial ou de fora. Por baixo, isso gera um lançamento de `Pagamento` por membro (mesmo tipo e regras da seção 11.1), só para quem recebeu alguma parcela, preservando o saldo e o extrato individual de cada um.
+- Segundo bloco, um dropdown fechado por padrão ("Outras pendências"): clientes **ausentes** com saldo ≠ 0 — quem já saiu do estabelecimento mas ainda tem conta pendente. Segue o mesmo padrão de linha recolhida/expandida do primeiro bloco.
+- Ação "Registrar pagamento" em um cliente com saldo pendente individual: valor sugerido é o saldo devedor em módulo, editável para pagamento parcial; gera um lançamento de `Pagamento` (seção 11.1).
+- Depois de registrar o pagamento, sugere marcar o cliente (ou os membros do grupo que ficaram quitados) como "saiu do estabelecimento" (ação opcional, um clique).
+- No extrato do cliente, os lançamentos aparecem em ordem crescente por data (do mais antigo para o mais recente). A cor do valor continua indicando débito (vermelho) ou crédito (verde); um ícone à esquerda de cada linha identifica o **tipo** do lançamento — `Consumo` com um ícone de recibo, `Crédito partida`/`Débito partida` com um ícone de troféu (evento de jogo), `Pagamento` com um ícone de dinheiro — assim dá pra reconhecer o tipo de cada linha de relance sem perder a cor vermelho/verde do valor.
 
 ---
 

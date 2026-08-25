@@ -51,7 +51,7 @@ export function NovoItemConsumoSheet({ onCadastrar }: NovoItemConsumoSheetProps)
   return (
     <Sheet open={aberto} onOpenChange={abrir}>
       <SheetTrigger asChild>
-        <Button variant="outline">Novo item</Button>
+        <Button>Novo item</Button>
       </SheetTrigger>
       <SheetContent>
         <SheetHeader>

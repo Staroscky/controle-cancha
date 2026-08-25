@@ -1,7 +1,8 @@
+import { Banknote, Receipt, Trophy, Users } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui/components/ui/tabs'
 import { Toaster } from '@/ui/components/ui/sonner'
-import { AcertoPage } from '@/ui/pages/AcertoPage'
 import { ClientesPage } from '@/ui/pages/ClientesPage'
+import { ComandasPage } from '@/ui/pages/ComandasPage'
 import { ConsumoPage } from '@/ui/pages/ConsumoPage'
 import { PartidaPage } from '@/ui/pages/PartidaPage'
 
@@ -12,10 +13,22 @@ function App() {
 
       <Tabs defaultValue="clientes">
         <TabsList className="grid w-full max-w-md grid-cols-4">
-          <TabsTrigger value="clientes">Clientes</TabsTrigger>
-          <TabsTrigger value="partida">Partida</TabsTrigger>
-          <TabsTrigger value="consumo">Consumo</TabsTrigger>
-          <TabsTrigger value="acerto">Acerto</TabsTrigger>
+          <TabsTrigger value="clientes">
+            <Users className="size-4" />
+            Clientes
+          </TabsTrigger>
+          <TabsTrigger value="partida">
+            <Trophy className="size-4" />
+            Partida
+          </TabsTrigger>
+          <TabsTrigger value="consumo">
+            <Receipt className="size-4" />
+            Consumo
+          </TabsTrigger>
+          <TabsTrigger value="comandas">
+            <Banknote className="size-4" />
+            Comandas
+          </TabsTrigger>
         </TabsList>
         <TabsContent value="clientes">
           <ClientesPage />
@@ -26,8 +39,8 @@ function App() {
         <TabsContent value="consumo">
           <ConsumoPage />
         </TabsContent>
-        <TabsContent value="acerto">
-          <AcertoPage />
+        <TabsContent value="comandas">
+          <ComandasPage />
         </TabsContent>
       </Tabs>
 

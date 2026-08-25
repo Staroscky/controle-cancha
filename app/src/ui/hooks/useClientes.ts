@@ -4,7 +4,9 @@ import {
   agruparClientes,
   definirPresencaCliente,
   listarClientes,
+  removerCliente,
   removerClienteDoGrupo,
+  renomearCliente,
 } from '@/data/clientesRepo'
 import { listarGrupos, renomearGrupo } from '@/data/gruposRepo'
 import type { Cliente } from '@/domain/types/Cliente'
@@ -24,6 +26,22 @@ export function useClientes() {
       const cliente = adicionarCliente(nome)
       recarregar()
       return cliente
+    },
+    [recarregar],
+  )
+
+  const renomear = useCallback(
+    (id: string, nome: string) => {
+      renomearCliente(id, nome)
+      recarregar()
+    },
+    [recarregar],
+  )
+
+  const remover = useCallback(
+    (id: string) => {
+      removerCliente(id)
+      recarregar()
     },
     [recarregar],
   )
@@ -64,6 +82,8 @@ export function useClientes() {
     clientes,
     grupos,
     cadastrar,
+    renomear,
+    remover,
     definirPresenca,
     agrupar,
     desagrupar,
