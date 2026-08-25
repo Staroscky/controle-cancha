@@ -1,7 +1,7 @@
 import { ArrowLeftRight, XIcon } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { calcularIndicativoConsumacao } from '@/domain/rules/calcularIndicativoConsumacao'
+import { calcularIndicativoConsumacaoAcumulado } from '@/domain/rules/calcularIndicativoConsumacaoAcumulado'
 import type { Cliente } from '@/domain/types/Cliente'
 import { EQUIPES } from '@/domain/types/Equipe'
 import type { LancamentoFinanceiro } from '@/domain/types/LancamentoFinanceiro'
@@ -65,8 +65,9 @@ function validarNovoParticipante(
 }
 
 type MontagemEquipesProps = {
-  partida: Partida
   participacoes: Participacao[]
+  todasParticipacoes: Participacao[]
+  todasPartidas: Partida[]
   clientes: Cliente[]
   lancamentos: LancamentoFinanceiro[]
   onAdicionar: (clienteId: string, equipeId: string, lado: Lado) => void
@@ -75,8 +76,9 @@ type MontagemEquipesProps = {
 }
 
 export function MontagemEquipes({
-  partida,
   participacoes,
+  todasParticipacoes,
+  todasPartidas,
   clientes,
   lancamentos,
   onAdicionar,
@@ -249,11 +251,11 @@ export function MontagemEquipes({
                       <ul className="space-y-1.5">
                         {noLado.map((participacao) => {
                           const cliente = clientes.find((c) => c.id === participacao.clienteId)
-                          const indicativo = calcularIndicativoConsumacao(
+                          const indicativo = calcularIndicativoConsumacaoAcumulado(
                             lancamentos,
+                            todasParticipacoes,
+                            todasPartidas,
                             participacao.clienteId,
-                            partida.id,
-                            partida.valorMinimoConsumacao,
                           )
                           return (
                             <li

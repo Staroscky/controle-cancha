@@ -1,5 +1,7 @@
 import { listarClientes } from '@/data/clientesRepo'
 import { listarLancamentos } from '@/data/lancamentosRepo'
+import { listarParticipacoes } from '@/data/participacoesRepo'
+import { listarPartidas } from '@/data/partidasRepo'
 import { ConcluirPartidaAlertDialog } from '@/ui/components/ConcluirPartidaAlertDialog'
 import { ConfiguracaoPadraoSheet } from '@/ui/components/ConfiguracaoPadraoSheet'
 import { CriarPartidaSheet } from '@/ui/components/CriarPartidaSheet'
@@ -26,6 +28,8 @@ export function PartidaPage() {
   const { configuracao, atualizar } = useConfiguracaoPadrao()
   const clientes = listarClientes()
   const lancamentos = listarLancamentos()
+  const todasParticipacoes = listarParticipacoes()
+  const todasPartidas = listarPartidas()
 
   return (
     <div className="space-y-4">
@@ -54,8 +58,9 @@ export function PartidaPage() {
           </div>
 
           <MontagemEquipes
-            partida={partida}
             participacoes={participacoes}
+            todasParticipacoes={todasParticipacoes}
+            todasPartidas={todasPartidas}
             clientes={clientes}
             lancamentos={lancamentos}
             onAdicionar={adicionarParticipante}

@@ -1,16 +1,11 @@
 import { GripVertical } from 'lucide-react'
 import { useMemo, useState, type DragEvent } from 'react'
+import { agruparClientesPorGrupo, type Bloco } from '@/domain/rules/agruparClientesPorGrupo'
 import type { Cliente } from '@/domain/types/Cliente'
 import type { Grupo } from '@/domain/types/Grupo'
 import { Card } from '@/ui/components/ui/card'
 import { Input } from '@/ui/components/ui/input'
 import { cn } from '@/ui/lib/utils'
-
-type Bloco = {
-  grupoId?: string
-  nome?: string
-  membros: Cliente[]
-}
 
 type QuadroPresencaProps = {
   clientes: Cliente[]

@@ -188,10 +188,12 @@ Regra simples, em duas partes independentes:
 
 O cliente consome livremente durante a partida (bebidas, comida etc.), e cada compra gera um lançamento de `consumo` real (seção 10) — isso não tem relação com vitória ou derrota, e é o único lançamento financeiro ligado ao consumo.
 
-Não existe nenhuma estrutura nova para guardar isso. A cada momento (na lista de clientes e no momento do pagamento/acerto), o sistema simplesmente calcula:
+Não existe nenhuma estrutura nova para guardar isso. O mínimo é **acumulado entre todas as partidas em que o cliente participou** (não só a partida atual) — se um cliente jogou 3 partidas com mínimo de R$ 5 cada, o mínimo total exigido dele é R$ 15. A cada momento (na tela de montagem da partida), o sistema simplesmente calcula:
 
 ```text
-faltante = valor mínimo configurado - soma dos lançamentos de consumo do cliente na partida
+minimoAcumulado = soma do valor mínimo configurado de cada partida em que o cliente participou
+consumoAcumulado = soma dos lançamentos de consumo do cliente vinculados a essas mesmas partidas
+faltante = minimoAcumulado - consumoAcumulado
 
 Se faltante > 0:
     mostra um indicativo visual (ex.: "faltam R$ X para o mínimo")
@@ -199,7 +201,7 @@ Se faltante <= 0:
     não mostra nada (mínimo já atingido)
 ```
 
-É só uma conta feita na hora de exibir, para o dono do estabelecimento saber quem ainda não bateu o mínimo. Não afeta o saldo do cliente, não é persistido, e pode ser ignorado.
+É só uma conta feita na hora de exibir, para o dono do estabelecimento saber quem ainda não bateu o mínimo acumulado. Não afeta o saldo do cliente, não é persistido, e pode ser ignorado. Consumo avulso (fora de partida, `partida_id` nulo) não entra nessa conta — só o consumo vinculado às partidas em que o cliente participou.
 
 **Parte 2 — Crédito de vitória (vem do perdedor, sempre referenciando a partida)**
 
@@ -234,8 +236,8 @@ O saldo de cada cliente é sempre a soma desses lançamentos financeiros — o i
 ### Exemplo — perdedor que consumiu abaixo do mínimo
 
 ```text
-Mínimo = R$ 6      |  Consumo real = R$ 2
-→ Indicativo na lista/pagamento: "faltam R$ 4 para o mínimo" (não afeta o saldo)
+Mínimo acumulado = R$ 6      |  Consumo acumulado = R$ 2
+→ Indicativo na tela de partida: "faltam R$ 4 para o mínimo" (não afeta o saldo)
 Cobrança de derrota = -R$ 6
 ------------------------------------------------
 Saldo financeiro gerado pela partida: -R$ 6
@@ -259,7 +261,7 @@ Cada cliente perdedor ativo gera **um único lançamento financeiro**, vinculado
 
 - `cobrança de derrota` → valor = `valor da partida por cliente`.
 
-Além disso, se o consumo real dele ficou abaixo do mínimo configurado, isso aparece como um **indicativo calculado na hora** (na lista de clientes e no pagamento) — mas isso não é um lançamento financeiro e não afeta o saldo do cliente.
+Além disso, se o consumo acumulado dele (seção 7) ficou abaixo do mínimo acumulado, isso aparece como um **indicativo calculado na hora** — mas isso não é um lançamento financeiro e não afeta o saldo do cliente.
 
 ### Exemplo: 4 × 4
 
@@ -303,7 +305,7 @@ Saldo financeiro de cada perdedor:
 -R$ 6 (cobrança de derrota)
 ```
 
-Independentemente de vitória ou derrota, qualquer cliente cujo consumo real na partida ficou abaixo do mínimo mostra um **indicativo calculado na hora** (seção 7) — sem impacto nesses valores de saldo.
+Independentemente de vitória ou derrota, qualquer cliente cujo consumo acumulado ficou abaixo do mínimo acumulado (seção 7) mostra um **indicativo calculado na hora** — sem impacto nesses valores de saldo.
 
 ---
 
@@ -378,16 +380,16 @@ Selecionado: João (já finalizou todas as partidas do dia)
 → lançamento: cliente=João, partida_id=null, tipo=Consumo, valor=-R$ 5,00, descricao="Refrigerante"
 ```
 
-É esse consumo real (soma de todos os lançamentos de consumo do cliente vinculados a uma partida) que será comparado ao valor mínimo configurado daquela partida, sempre que necessário exibir (lista de clientes, momento do pagamento). Se ficar abaixo, mostra-se um **indicativo calculado na hora** — não é um lançamento financeiro nem algo armazenado.
+É esse consumo real (soma de todos os lançamentos de consumo do cliente vinculados a uma partida) que entra na soma do consumo acumulado usada pelo indicativo da seção 7 — o mínimo comparado é a soma dos mínimos de todas as partidas em que o cliente participou, não só o mínimo desta partida isolada.
 
 Exemplo:
 
 ```text
 João
 Equipe: Azul
-Consumo real na partida: R$ 15,00
-Mínimo configurado: R$ 6,00
-→ Consumo real já superou o mínimo, nenhum indicativo exibido.
+Participou de 2 partidas hoje, mínimo R$ 6,00 cada → mínimo acumulado R$ 12,00
+Consumo real somado nas duas partidas: R$ 15,00
+→ Consumo acumulado já superou o mínimo acumulado, nenhum indicativo exibido.
 ```
 
 O sistema deve permitir identificar quanto cada cliente:
@@ -642,7 +644,7 @@ A interface é dividida em 4 abas. Essa divisão é uma sugestão de UX — não
   - `Débito partida` (cobrança de derrota) para cada perdedor ativo.
   - `Crédito partida` (crédito de vitória) dividido entre os vencedores ativos.
   - (seção 7 e 8)
-- Exibe, para cada cliente ativo na partida, o indicativo calculado de consumação mínima (seção 7, "faltam R$ X para o mínimo"), sem afetar o saldo.
+- Exibe, para cada cliente ativo na partida, o indicativo calculado de consumação mínima **acumulada entre todas as partidas em que ele participou** (seção 7, "faltam R$ X para o mínimo"), sem afetar o saldo.
 - Mostra um histórico das partidas já concluídas (data, equipe vencedora, quantidade de participantes ativos, valor por cliente); cada item expande e mostra os participantes ativos agrupados por equipe. A partir de uma partida do histórico, é possível criar uma nova partida reaproveitando os mesmos clientes, repetindo a equipe e o lado exatos de cada um — usando os valores da configuração padrão atual (não os valores da partida antiga). Cliente que não está mais presente no estabelecimento é ignorado nessa cópia (seção 3.1).
 - É possível limpar o histórico (apagar os registros de partidas concluídas da lista). Isso não desfaz nenhum lançamento financeiro já gerado por essas partidas — créditos e débitos continuam valendo no saldo do cliente normalmente.
 
@@ -691,11 +693,13 @@ O cliente só passa a fazer parte da participação.
 ### Consumação mínima (indicativo calculado na hora, não é lançamento nem dado armazenado)
 
 ```text
-faltante = valor mínimo - soma do consumo real do cliente na partida
+minimoAcumulado = soma do valor mínimo de todas as partidas em que o cliente participou
+consumoAcumulado = soma do consumo real do cliente vinculado a essas partidas
+faltante = minimoAcumulado - consumoAcumulado
 
 Se faltante > 0:
     mostra indicativo (ex.: "faltam R$ X para o mínimo")
-    na lista de clientes e no momento do pagamento
+    na tela de partida
 
 Se faltante <= 0:
     nenhum indicativo
