@@ -61,7 +61,7 @@ export function ComandaBloco({
       {expandido && (
         <div className="space-y-2 border-t p-3">
           {bloco.grupoId && algumDevedor && (
-            <div className="flex justify-end">
+            <div className="flex justify-end gap-2">
               <RegistrarPagamentoGrupoSheet
                 nomeGrupo={bloco.nome}
                 membros={membrosComSaldo}

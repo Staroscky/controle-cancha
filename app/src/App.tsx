@@ -23,7 +23,7 @@ function App() {
           </TabsTrigger>
           <TabsTrigger value="consumo">
             <Receipt className="size-4" />
-            Consumo
+            Catálogo
           </TabsTrigger>
           <TabsTrigger value="comandas">
             <Banknote className="size-4" />

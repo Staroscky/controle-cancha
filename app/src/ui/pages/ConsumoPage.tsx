@@ -1,7 +1,6 @@
 import { Pencil, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { listarClientes } from '@/data/clientesRepo'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,16 +22,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/ui/components/ui/table'
-import { LancarConsumoSheet } from '@/ui/components/LancarConsumoSheet'
 import { NovoItemConsumoSheet } from '@/ui/components/NovoItemConsumoSheet'
 import { useConsumo } from '@/ui/hooks/useConsumo'
 
 const formatoMoeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
 
 export function ConsumoPage() {
-  const { itens, cadastrarItem, editarItem, removerItem, lancar } = useConsumo()
-  const clientes = listarClientes()
-  const existeClientePresente = clientes.some((c) => c.presente)
+  const { itens, cadastrarItem, editarItem, removerItem } = useConsumo()
   const [editandoId, setEditandoId] = useState<string | null>(null)
   const [nomeEdicao, setNomeEdicao] = useState('')
   const [valorEdicao, setValorEdicao] = useState('')
@@ -75,24 +71,12 @@ export function ConsumoPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Consumo</h2>
-        <div className="flex gap-2">
-          <NovoItemConsumoSheet onCadastrar={cadastrarItem} />
-          {existeClientePresente && (
-            <LancarConsumoSheet itens={itens} clientes={clientes} onLancar={lancar} />
-          )}
-        </div>
+        <h2 className="text-lg font-semibold">Catálogo de itens</h2>
+        <NovoItemConsumoSheet onCadastrar={cadastrarItem} />
       </div>
-
-      {!existeClientePresente && (
-        <p className="text-sm text-muted-foreground">
-          Nenhum cliente presente no momento. Marque a chegada de algum cliente para lançar consumo.
-        </p>
-      )}
 
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-2">
-          <h3 className="text-sm font-semibold text-muted-foreground">Catálogo de itens</h3>
           <Input
             placeholder="Filtrar por nome..."
             value={filtro}

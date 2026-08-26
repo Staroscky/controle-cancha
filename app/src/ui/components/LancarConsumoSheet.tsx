@@ -1,8 +1,11 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
+import { agruparClientesPorGrupo } from '@/domain/rules/agruparClientesPorGrupo'
 import type { Cliente } from '@/domain/types/Cliente'
+import type { Grupo } from '@/domain/types/Grupo'
 import type { ItemConsumo } from '@/domain/types/ItemConsumo'
 import { Button } from '@/ui/components/ui/button'
+import { Combobox } from '@/ui/components/ui/combobox'
 import { Input } from '@/ui/components/ui/input'
 import { Label } from '@/ui/components/ui/label'
 import {
@@ -15,18 +18,25 @@ import {
   SheetTrigger,
 } from '@/ui/components/ui/sheet'
 
-const SELECT_CLASSNAME =
-  'h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm dark:bg-input/30'
-
 type Origem = 'catalogo' | 'avulso'
 
 type LancarConsumoSheetProps = {
   itens: ItemConsumo[]
   clientes: Cliente[]
+  grupos?: Grupo[]
   onLancar: (descricao: string, valor: number, itemId: string | null, clienteIds: string[]) => void
+  clienteIdsPadrao?: string[]
+  titulo?: string
 }
 
-export function LancarConsumoSheet({ itens, clientes, onLancar }: LancarConsumoSheetProps) {
+export function LancarConsumoSheet({
+  itens,
+  clientes,
+  grupos,
+  onLancar,
+  clienteIdsPadrao,
+  titulo,
+}: LancarConsumoSheetProps) {
   const clientesPresentes = clientes.filter((c) => c.presente)
 
   const [aberto, setAberto] = useState(false)
@@ -35,6 +45,7 @@ export function LancarConsumoSheet({ itens, clientes, onLancar }: LancarConsumoS
   const [descricao, setDescricao] = useState('')
   const [valor, setValor] = useState('')
   const [clienteIds, setClienteIds] = useState<string[]>([])
+  const [filtroCliente, setFiltroCliente] = useState('')
 
   function abrir(aberto: boolean) {
     if (aberto) {
@@ -42,7 +53,8 @@ export function LancarConsumoSheet({ itens, clientes, onLancar }: LancarConsumoS
       setItemId('')
       setDescricao('')
       setValor('')
-      setClienteIds([])
+      setClienteIds(clienteIdsPadrao ?? [])
+      setFiltroCliente('')
     }
     setAberto(aberto)
   }
@@ -57,10 +69,8 @@ export function LancarConsumoSheet({ itens, clientes, onLancar }: LancarConsumoS
   function handleSelecionarItem(id: string) {
     setItemId(id)
     const item = itens.find((i) => i.id === id)
-    if (item) {
-      setDescricao(item.nome)
-      setValor(String(item.valor))
-    }
+    setDescricao(item?.nome ?? '')
+    setValor(item ? String(item.valor) : '')
   }
 
   function toggleCliente(id: string) {
@@ -91,6 +101,15 @@ export function LancarConsumoSheet({ itens, clientes, onLancar }: LancarConsumoS
     setAberto(false)
   }
 
+  const termoCliente = filtroCliente.trim().toLowerCase()
+  const blocosClientes = agruparClientesPorGrupo(clientesPresentes, grupos ?? []).filter(
+    (bloco) =>
+      !termoCliente ||
+      [bloco.nome, ...bloco.membros.map((m) => m.nome)].some((nome) =>
+        nome?.toLowerCase().includes(termoCliente),
+      ),
+  )
+
   return (
     <Sheet open={aberto} onOpenChange={abrir}>
       <SheetTrigger asChild>
@@ -98,7 +117,7 @@ export function LancarConsumoSheet({ itens, clientes, onLancar }: LancarConsumoS
       </SheetTrigger>
       <SheetContent>
         <SheetHeader>
-          <SheetTitle>Lançar consumo</SheetTitle>
+          <SheetTitle>{titulo ?? 'Lançar consumo'}</SheetTitle>
           <SheetDescription>
             Escolha o item e os clientes presentes que vão dividir o valor.
           </SheetDescription>
@@ -129,19 +148,15 @@ export function LancarConsumoSheet({ itens, clientes, onLancar }: LancarConsumoS
           {origem === 'catalogo' && (
             <div className="grid gap-2">
               <Label htmlFor="consumo-item-catalogo">Item do catálogo</Label>
-              <select
+              <Combobox
                 id="consumo-item-catalogo"
-                className={SELECT_CLASSNAME}
                 value={itemId}
-                onChange={(e) => handleSelecionarItem(e.target.value)}
-              >
-                <option value="">Selecione um item</option>
-                {itens.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.nome}
-                  </option>
-                ))}
-              </select>
+                onValueChange={handleSelecionarItem}
+                options={itens.map((item) => ({ value: item.id, label: item.nome }))}
+                placeholder="Selecione um item"
+                searchPlaceholder="Filtrar item..."
+                emptyText="Nenhum item encontrado."
+              />
               {itens.length === 0 && (
                 <p className="text-xs text-muted-foreground">Nenhum item cadastrado no catálogo.</p>
               )}
@@ -172,23 +187,50 @@ export function LancarConsumoSheet({ itens, clientes, onLancar }: LancarConsumoS
           </div>
 
           <div className="grid gap-2">
-            <span className="text-sm font-medium">Clientes</span>
-            <div className="flex flex-wrap gap-2">
-              {clientesPresentes.map((cliente) => (
-                <Button
-                  key={cliente.id}
-                  type="button"
-                  size="sm"
-                  variant={clienteIds.includes(cliente.id) ? 'default' : 'outline'}
-                  onClick={() => toggleCliente(cliente.id)}
-                >
-                  {cliente.nome}
-                </Button>
-              ))}
-            </div>
-            {clientesPresentes.length === 0 && (
-              <p className="text-xs text-muted-foreground">Nenhum cliente presente no momento.</p>
+            <span className="text-sm font-medium">
+              Clientes {clienteIds.length > 0 && `(${clienteIds.length} selecionado${clienteIds.length > 1 ? 's' : ''})`}
+            </span>
+            {clientesPresentes.length > 0 && (
+              <Input
+                placeholder="Filtrar cliente ou grupo..."
+                value={filtroCliente}
+                onChange={(e) => setFiltroCliente(e.target.value)}
+                className="h-8"
+              />
             )}
+            <div className="max-h-56 divide-y overflow-y-auto rounded-md border">
+              {blocosClientes.map((bloco) => (
+                <div key={bloco.grupoId ?? bloco.membros[0].id}>
+                  {bloco.grupoId && (
+                    <div className="bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
+                      {bloco.nome || 'Grupo'}
+                    </div>
+                  )}
+                  {bloco.membros.map((cliente) => (
+                    <label
+                      key={cliente.id}
+                      className="flex cursor-pointer items-center gap-2 px-3 py-2 text-sm hover:bg-muted/50"
+                    >
+                      <input
+                        type="checkbox"
+                        className="size-4 accent-foreground"
+                        checked={clienteIds.includes(cliente.id)}
+                        onChange={() => toggleCliente(cliente.id)}
+                      />
+                      <span>{cliente.nome}</span>
+                    </label>
+                  ))}
+                </div>
+              ))}
+              {clientesPresentes.length > 0 && blocosClientes.length === 0 && (
+                <p className="px-3 py-2 text-xs text-muted-foreground">
+                  Nenhum cliente encontrado para "{filtroCliente}".
+                </p>
+              )}
+              {clientesPresentes.length === 0 && (
+                <p className="px-3 py-2 text-xs text-muted-foreground">Nenhum cliente presente no momento.</p>
+              )}
+            </div>
           </div>
         </div>
         <SheetFooter>

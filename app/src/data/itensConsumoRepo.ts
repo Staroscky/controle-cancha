@@ -7,6 +7,10 @@ export function listarItensConsumo(): ItemConsumo[] {
   return getItem<ItemConsumo[]>(CHAVE, [])
 }
 
+export function listarItensConsumoOrdenados(): ItemConsumo[] {
+  return listarItensConsumo().sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
+}
+
 export function adicionarItemConsumo(nome: string, valor: number): ItemConsumo {
   const item: ItemConsumo = { id: crypto.randomUUID(), nome, valor }
   setItem(CHAVE, [...listarItensConsumo(), item])
