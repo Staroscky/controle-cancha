@@ -10,27 +10,13 @@ import type { Cliente } from '@/domain/types/Cliente'
 import type { LancamentoFinanceiro } from '@/domain/types/LancamentoFinanceiro'
 import { TIPO_LANCAMENTO_IDS } from '@/domain/types/TipoLancamento'
 import { Button } from '@/ui/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/ui/components/ui/dialog'
 import { cn } from '@/ui/lib/utils'
 
 const formatoMoeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
 const formatoDia = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'long' })
 const formatoHora = new Intl.DateTimeFormat('pt-BR', { timeStyle: 'short' })
 
-type IconeDoLancamentoProps = {
-  tipoId: string
-  className?: string
-}
-
-function IconeDoLancamento({ tipoId, className }: IconeDoLancamentoProps) {
+function IconeDoLancamento({ tipoId, className }: { tipoId: string; className?: string }) {
   switch (tipoId) {
     case TIPO_LANCAMENTO_IDS.creditoPartida:
     case TIPO_LANCAMENTO_IDS.debitoPartida:
@@ -51,6 +37,11 @@ function corDoIcone(valor: number) {
   return valor > 0 ? 'bg-emerald-500/15 text-emerald-600' : 'bg-background text-muted-foreground'
 }
 
+// Saldo (diferente do valor de um lançamento) sempre destaca dívida em vermelho, igual à Aba Clientes.
+function corDoSaldo(saldo: number) {
+  return saldo < 0 ? 'text-destructive' : 'text-emerald-600'
+}
+
 function ehHoje(data: string) {
   return data === chaveDoDia(new Date().toISOString())
 }
@@ -59,13 +50,7 @@ function rotuloDoDia(grupo: GrupoLancamentosPorDia) {
   return ehHoje(grupo.data) ? 'Hoje' : formatoDia.format(new Date(grupo.lancamentos[0].criadoEm))
 }
 
-type LinhaSaldoProps = {
-  rotulo: string
-  valor: number
-  enfase?: boolean
-}
-
-function LinhaSaldo({ rotulo, valor, enfase = false }: LinhaSaldoProps) {
+function LinhaSaldo({ rotulo, valor, enfase = false }: { rotulo: string; valor: number; enfase?: boolean }) {
   return (
     <div
       className={cn(
@@ -74,7 +59,7 @@ function LinhaSaldo({ rotulo, valor, enfase = false }: LinhaSaldoProps) {
       )}
     >
       <span>{rotulo}</span>
-      <span className={enfase ? corDoValor(valor) : undefined}>{formatoMoeda.format(valor)}</span>
+      <span className={enfase ? corDoSaldo(valor) : undefined}>{formatoMoeda.format(valor)}</span>
     </div>
   )
 }
@@ -101,11 +86,7 @@ function NavegacaoDia({ rotulo, podeVoltar, podeAvancar, onVoltar, onAvancar }: 
   )
 }
 
-type ItemLancamentoProps = {
-  lancamento: LancamentoFinanceiro
-}
-
-function ItemLancamento({ lancamento }: ItemLancamentoProps) {
+function ItemLancamento({ lancamento }: { lancamento: LancamentoFinanceiro }) {
   return (
     <li className="flex items-center justify-between gap-3 rounded-2xl bg-muted px-4 py-3">
       <div className="flex items-center gap-3">
@@ -129,75 +110,53 @@ function ItemLancamento({ lancamento }: ItemLancamentoProps) {
   )
 }
 
-type ExtratoClienteDialogProps = {
+type ExtratoClienteProps = {
   cliente: Cliente
   lancamentos: LancamentoFinanceiro[]
 }
 
-export function ExtratoClienteDialog({ cliente, lancamentos }: ExtratoClienteDialogProps) {
-  const [aberto, setAberto] = useState(false)
-  const [indice, setIndice] = useState(0)
+export function ExtratoCliente({ cliente, lancamentos }: ExtratoClienteProps) {
   const grupos = agruparLancamentosPorDia(lancamentos)
   const saldoAtual = calcularSaldo(lancamentos, cliente.id)
   const indiceUltimoDia = Math.max(grupos.length - 1, 0)
+  const [indice, setIndice] = useState(indiceUltimoDia)
   const indiceAtual = Math.min(indice, indiceUltimoDia)
   const grupoAtual = grupos[indiceAtual]
   const ehUltimoDia = indiceAtual === indiceUltimoDia
 
-  function abrir(valor: boolean) {
-    if (valor) {
-      setIndice(indiceUltimoDia)
-    }
-    setAberto(valor)
-  }
-
   return (
-    <Dialog open={aberto} onOpenChange={abrir}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          Ver extrato
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Extrato — {cliente.nome}</DialogTitle>
-          <DialogDescription>Navegue pelos dias para ver o histórico.</DialogDescription>
-        </DialogHeader>
+    <div className="flex h-full min-h-0 flex-col gap-3">
+      {grupoAtual ? (
+        <div className="flex min-h-0 flex-1 flex-col gap-3">
+          <NavegacaoDia
+            rotulo={rotuloDoDia(grupoAtual)}
+            podeVoltar={indiceAtual > 0}
+            podeAvancar={!ehUltimoDia}
+            onVoltar={() => setIndice(indiceAtual - 1)}
+            onAvancar={() => setIndice(indiceAtual + 1)}
+          />
 
-        {grupoAtual ? (
-          <div className="flex flex-col gap-3">
-            <NavegacaoDia
-              rotulo={rotuloDoDia(grupoAtual)}
-              podeVoltar={indiceAtual > 0}
-              podeAvancar={!ehUltimoDia}
-              onVoltar={() => setIndice(indiceAtual - 1)}
-              onAvancar={() => setIndice(indiceAtual + 1)}
-            />
+          <LinhaSaldo rotulo="Saldo anterior" valor={grupoAtual.saldoAnterior} />
 
-            <LinhaSaldo rotulo="Saldo anterior" valor={grupoAtual.saldoAnterior} />
-
-            <div className="max-h-[45vh] overflow-y-auto py-1 pr-1">
-              <ul className="space-y-2">
-                {grupoAtual.lancamentos.map((lancamento) => (
-                  <ItemLancamento key={lancamento.id} lancamento={lancamento} />
-                ))}
-              </ul>
-            </div>
-
-            {!ehUltimoDia && (
-              <div className="border-t pt-3">
-                <LinhaSaldo rotulo="Saldo do dia" valor={grupoAtual.saldoDoDia} enfase />
-              </div>
-            )}
+          <div className="flex-1 overflow-y-auto pr-1">
+            <ul className="space-y-2">
+              {grupoAtual.lancamentos.map((lancamento) => (
+                <ItemLancamento key={lancamento.id} lancamento={lancamento} />
+              ))}
+            </ul>
           </div>
-        ) : (
-          <p className="text-sm text-muted-foreground">Nenhum lançamento para este cliente.</p>
-        )}
+        </div>
+      ) : (
+        <p className="flex-1 text-sm text-muted-foreground">Nenhum lançamento para este cliente.</p>
+      )}
 
-        <DialogFooter>
+      <div className="border-t pt-3">
+        {ehUltimoDia ? (
           <LinhaSaldo rotulo="Saldo atual" valor={saldoAtual} enfase />
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        ) : (
+          <LinhaSaldo rotulo="Saldo do dia" valor={grupoAtual!.saldoDoDia} enfase />
+        )}
+      </div>
+    </div>
   )
 }

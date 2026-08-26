@@ -33,3 +33,18 @@
   - [x] Extrato do cliente lista os lançamentos do mais antigo para o mais recente
   - [x] Valor no extrato mantém vermelho (débito) / verde (crédito); um ícone por tipo (recibo p/ Consumo, troféu p/ Crédito e Débito partida, dinheiro p/ Pagamento) identifica de onde veio cada lançamento
 - [x] Sem erros no console do navegador
+
+## Verificação — drawer unificado extrato + pagamento (task 08)
+
+- [x] `npm run build` e `npm run test` passam
+- [x] Testado manualmente no navegador:
+  - [x] Clicar numa linha de "Presentes" (cliente sem grupo) abre o drawer direto com extrato em cima e "Fechar de [nome]" fixo embaixo
+  - [x] Clicar num grupo abre o drawer com abas "Geral" + uma por membro; "Geral" é a aba inicial
+  - [x] Aba "Geral": lista membros com saldo e um único campo de valor (sugerido = soma das dívidas); botão "Fechar grupo" aplica a mesma alocação de sempre (quem deve mais primeiro)
+  - [x] Aba de um membro: extrato individual completo, mesma ordem/cores/ícones de antes; botão "Fechar de [nome]" com valor sugerido = saldo devedor em módulo
+  - [x] Nunca aparecem os dois botões (grupo e individual) ao mesmo tempo — só o da aba ativa
+  - [x] Cliente/grupo em crédito ou saldo zero não mostra botão de fechar na aba correspondente
+  - [x] Só um drawer aberto por vez — o overlay do próprio Sheet bloqueia clique em outra linha de trás; é preciso fechar (ou o overlay fecha ao clicar fora) antes de abrir outra comanda, garantindo que nenhum saldo de outro cliente fique visível na tela
+  - [x] "Outras pendências" (ausentes) abre o mesmo drawer
+  - [x] Toast de pagamento com ação "Marcar saída" continua funcionando (individual e grupo)
+- [x] Sem erros no console do navegador

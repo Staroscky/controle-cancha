@@ -90,8 +90,8 @@ Arquivos pequenos, um assunto por arquivo:
 | Situação | Componente shadcn |
 |---|---|
 | Confirmação de ação destrutiva ou importante (ex.: excluir cliente, finalizar partida, registrar pagamento) | `AlertDialog` |
-| Formulário ou fluxo que precisa de mais espaço sem sair da tela atual (ex.: cadastrar cliente, lançar consumo, montar partida) | `Sheet` (drawer lateral) |
+| Formulário ou fluxo que precisa de mais espaço sem sair da tela atual (ex.: cadastrar cliente, lançar consumo, montar partida, abrir a comanda de um cliente/grupo — extrato e registro de pagamento juntos no mesmo drawer) | `Sheet` (drawer lateral) |
 | Feedback rápido de uma ação concluída (ex.: "Pagamento registrado", "Cliente cadastrado", erro de validação) | `Toast` (via `sonner`, integrado ao shadcn) |
-| Conteúdo informativo pontual (ex.: ver extrato de um cliente, detalhe de uma partida) | `Dialog` |
+| Conteúdo informativo pontual (ex.: detalhe de uma partida) | `Dialog` |
 
 Essa tabela é o ponto de partida — qualquer nova interação deve ser mapeada para um desses componentes (ou justificar a exceção) antes de implementar.

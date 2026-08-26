@@ -2,14 +2,11 @@ import { ChevronDown } from 'lucide-react'
 import { useState } from 'react'
 import { agruparClientesPorGrupo, type Bloco } from '@/domain/rules/agruparClientesPorGrupo'
 import { ComandaBloco } from '@/ui/components/ComandaBloco'
+import { ComandaDrawer } from '@/ui/components/ComandaDrawer'
 import { LancarConsumoSheet } from '@/ui/components/LancarConsumoSheet'
 import { Input } from '@/ui/components/ui/input'
 import { useComandas } from '@/ui/hooks/useComandas'
 import { cn } from '@/ui/lib/utils'
-
-function chaveDoBloco(bloco: Bloco) {
-  return bloco.grupoId ?? bloco.membros[0].id
-}
 
 export function ComandasPage() {
   const {
@@ -25,13 +22,9 @@ export function ComandasPage() {
     marcarSaidaGrupo,
   } = useComandas()
 
-  const [expandidoId, setExpandidoId] = useState<string | null>(null)
+  const [blocoAberto, setBlocoAberto] = useState<Bloco | null>(null)
   const [outrasAbertas, setOutrasAbertas] = useState(false)
   const [filtro, setFiltro] = useState('')
-
-  function toggle(chave: string) {
-    setExpandidoId((atual) => (atual === chave ? null : chave))
-  }
 
   const presentes = clientes.filter((c) => c.presente)
   const blocosPresentes = agruparClientesPorGrupo(presentes, grupos)
@@ -49,21 +42,8 @@ export function ComandasPage() {
   )
 
   function renderBloco(bloco: Bloco) {
-    const chave = chaveDoBloco(bloco)
-    return (
-      <ComandaBloco
-        key={chave}
-        bloco={bloco}
-        expandido={expandidoId === chave}
-        onToggle={() => toggle(chave)}
-        saldoDoCliente={saldoDoCliente}
-        extratoDoCliente={extratoDoCliente}
-        onRegistrarPagamento={registrarPagamento}
-        onRegistrarPagamentoGrupo={registrarPagamentoGrupo}
-        onMarcarSaida={marcarSaida}
-        onMarcarSaidaGrupo={marcarSaidaGrupo}
-      />
-    )
+    const chave = bloco.grupoId ?? bloco.membros[0].id
+    return <ComandaBloco key={chave} bloco={bloco} onAbrir={setBlocoAberto} />
   }
 
   return (
@@ -126,6 +106,17 @@ export function ComandasPage() {
           )}
         </>
       )}
+
+      <ComandaDrawer
+        bloco={blocoAberto}
+        onFechar={() => setBlocoAberto(null)}
+        saldoDoCliente={saldoDoCliente}
+        extratoDoCliente={extratoDoCliente}
+        onRegistrarPagamento={registrarPagamento}
+        onRegistrarPagamentoGrupo={registrarPagamentoGrupo}
+        onMarcarSaida={marcarSaida}
+        onMarcarSaidaGrupo={marcarSaidaGrupo}
+      />
     </div>
   )
 }
