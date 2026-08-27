@@ -17,10 +17,6 @@ import {
 } from '@/ui/components/ui/sheet'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui/components/ui/tabs'
 
-function chaveDoBloco(bloco: Bloco) {
-  return bloco.grupoId ?? bloco.membros[0].id
-}
-
 type ComandaDrawerProps = {
   bloco: Bloco | null
   onFechar: () => void
@@ -44,13 +40,16 @@ export function ComandaDrawer({
 }: ComandaDrawerProps) {
   // Mantém o conteúdo montado durante a animação de fechar (Sheet fica com open=false,
   // mas o último bloco selecionado continua renderizado até o Sheet ser desmontado).
+  // Atualizado durante o render (não em useEffect) para que membrosComSaldo/totalDevido/etc.
+  // abaixo já reflitam o bloco novo neste mesmo ciclo — um useEffect aqui deixava os efeitos
+  // de aba/valor lerem blocoAtual desatualizado (um clique "atrás") na primeira renderização
+  // após abrir uma comanda.
   const [blocoAtual, setBlocoAtual] = useState<Bloco | null>(bloco)
-  useEffect(() => {
-    if (bloco) setBlocoAtual(bloco)
-  }, [bloco])
+  if (bloco && bloco !== blocoAtual) {
+    setBlocoAtual(bloco)
+  }
 
   const temAbas = !!blocoAtual?.grupoId && blocoAtual.membros.length > 1
-  const chave = blocoAtual ? chaveDoBloco(blocoAtual) : null
 
   const [aba, setAba] = useState('geral')
   const [valor, setValor] = useState('')
@@ -60,9 +59,11 @@ export function ComandaDrawer({
     if (blocoAtual) {
       setAba(temAbas ? 'geral' : blocoAtual.membros[0].id)
     }
-    // troca de comanda sempre volta pra aba padrão
+    // toda vez que a comanda é (re)aberta, volta pra aba padrão — não usar `chave`
+    // aqui: reabrir a MESMA comanda não muda `chave`, mas o saldo pode ter mudado
+    // enquanto ela estava fechada (bug: campo de valor ficava travado no saldo antigo)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chave])
+  }, [bloco])
 
   const membrosComSaldo: MembroComSaldo[] = blocoAtual
     ? blocoAtual.membros.map((cliente) => ({ cliente, saldo: saldoDoCliente(cliente.id) }))
@@ -76,9 +77,9 @@ export function ComandaDrawer({
     if (!blocoAtual) return
     setValor(String(ehAbaGeral ? totalDevido : Math.abs(membroAtivo?.saldo ?? 0)))
     setDescricao('')
-    // recalcula o valor sugerido sempre que a comanda ou a aba mudam
+    // recalcula o valor sugerido sempre que a comanda é (re)aberta ou a aba muda
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chave, aba])
+  }, [bloco, aba])
 
   if (!blocoAtual) return null
 

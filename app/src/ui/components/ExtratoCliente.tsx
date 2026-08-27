@@ -38,7 +38,7 @@ function corDoIcone(valor: number) {
 }
 
 // Saldo (diferente do valor de um lançamento) sempre destaca dívida em vermelho, igual à Aba Clientes.
-function corDoSaldo(saldo: number) {
+export function corDoSaldo(saldo: number) {
   return saldo < 0 ? 'text-destructive' : 'text-emerald-600'
 }
 
@@ -50,7 +50,7 @@ function rotuloDoDia(grupo: GrupoLancamentosPorDia) {
   return ehHoje(grupo.data) ? 'Hoje' : formatoDia.format(new Date(grupo.lancamentos[0].criadoEm))
 }
 
-function LinhaSaldo({ rotulo, valor, enfase = false }: { rotulo: string; valor: number; enfase?: boolean }) {
+export function LinhaSaldo({ rotulo, valor, enfase = false }: { rotulo: string; valor: number; enfase?: boolean }) {
   return (
     <div
       className={cn(
