@@ -44,7 +44,7 @@ function App() {
         </TabsContent>
       </Tabs>
 
-      <Toaster />
+      <Toaster position="bottom-center" closeButton />
     </div>
   )
 }

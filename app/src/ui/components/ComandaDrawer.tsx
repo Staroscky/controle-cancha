@@ -23,7 +23,11 @@ type ComandaDrawerProps = {
   saldoDoCliente: (clienteId: string) => number
   extratoDoCliente: (clienteId: string) => LancamentoFinanceiro[]
   onRegistrarPagamento: (clienteId: string, valor: number, descricao: string) => boolean
-  onRegistrarPagamentoGrupo: (itens: ItemPagamentoGrupo[], descricao: string) => boolean
+  onRegistrarPagamentoGrupo: (
+    itens: ItemPagamentoGrupo[],
+    descricao: string,
+    usosCredito: ItemPagamentoGrupo[],
+  ) => boolean
   onMarcarSaida: (clienteId: string) => void
   onMarcarSaidaGrupo: (clienteIds: string[]) => void
 }
@@ -54,6 +58,7 @@ export function ComandaDrawer({
   const [aba, setAba] = useState('geral')
   const [valor, setValor] = useState('')
   const [descricao, setDescricao] = useState('')
+  const [creditosUsados, setCreditosUsados] = useState<Record<string, string>>({})
 
   useEffect(() => {
     if (blocoAtual) {
@@ -77,16 +82,46 @@ export function ComandaDrawer({
     if (!blocoAtual) return
     setValor(String(ehAbaGeral ? totalDevido : Math.abs(membroAtivo?.saldo ?? 0)))
     setDescricao('')
+    setCreditosUsados({})
     // recalcula o valor sugerido sempre que a comanda é (re)aberta ou a aba muda
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bloco, aba])
 
   if (!blocoAtual) return null
 
+  const totalCreditoUsado = Object.values(creditosUsados).reduce((soma, v) => soma + (Number(v) || 0), 0)
+
   const itensAlocados = alocarPagamentoGrupo(
     devedores.map((m) => ({ clienteId: m.cliente.id, valorDevido: Math.abs(m.saldo) })),
-    Number(valor),
+    Number(valor) + totalCreditoUsado,
   )
+
+  // Limite de crédito que cada credor ainda pode ceder: não pode passar do próprio saldo
+  // nem do que falta cobrir (dinheiro digitado + crédito que os outros credores já cederam),
+  // pra nunca debitar de alguém um crédito que não teria pra onde ir.
+  function limiteCredito(clienteId: string, saldoCredor: number) {
+    const outros = Object.entries(creditosUsados)
+      .filter(([id]) => id !== clienteId)
+      .reduce((soma, [, v]) => soma + (Number(v) || 0), 0)
+    const restante = Math.max(0, totalDevido - Number(valor) - outros)
+    return Math.min(saldoCredor, restante)
+  }
+
+  const limitesCreditos = Object.fromEntries(
+    membrosComSaldo
+      .filter((m) => m.saldo > 0)
+      .map((m) => [m.cliente.id, limiteCredito(m.cliente.id, m.saldo)]),
+  )
+
+  function handleCreditoChange(clienteId: string, saldoCredor: number, digitado: string) {
+    if (digitado === '') {
+      setCreditosUsados((atual) => ({ ...atual, [clienteId]: '' }))
+      return
+    }
+    const max = limiteCredito(clienteId, saldoCredor)
+    const numerico = Math.min(Math.max(Number(digitado) || 0, 0), max)
+    setCreditosUsados((atual) => ({ ...atual, [clienteId]: String(numerico) }))
+  }
 
   function handleConfirmarGrupo() {
     if (!blocoAtual) return
@@ -94,14 +129,21 @@ export function ComandaDrawer({
       toast.error('Informe um valor válido (maior que zero).')
       return
     }
-    const registrado = onRegistrarPagamentoGrupo(itensAlocados, descricao)
+    const usosCredito: ItemPagamentoGrupo[] = Object.entries(creditosUsados)
+      .map(([clienteId, v]) => ({ clienteId, valor: Number(v) || 0 }))
+      .filter((item) => item.valor > 0)
+    const registrado = onRegistrarPagamentoGrupo(itensAlocados, descricao, usosCredito)
     if (!registrado) {
       toast.error('Informe um valor válido (maior que zero).')
       return
     }
-    const quitados = devedores
+    const devedoresQuitados = devedores
       .filter((m) => (itensAlocados.find((item) => item.clienteId === m.cliente.id)?.valor ?? 0) >= Math.abs(m.saldo))
       .map((m) => m.cliente.id)
+    const credoresZerados = usosCredito
+      .filter((item) => item.valor >= (membrosComSaldo.find((m) => m.cliente.id === item.clienteId)?.saldo ?? 0))
+      .map((item) => item.clienteId)
+    const quitados = [...devedoresQuitados, ...credoresZerados]
     onFechar()
     toast.success(`Pagamento do grupo${blocoAtual.nome ? ` ${blocoAtual.nome}` : ''} registrado.`, {
       action: { label: 'Marcar grupo como saída', onClick: () => onMarcarSaidaGrupo(quitados) },
@@ -149,7 +191,13 @@ export function ComandaDrawer({
               ))}
             </TabsList>
             <TabsContent value="geral" className="flex min-h-0 flex-1 flex-col overflow-y-auto pt-3 pb-1">
-              <RevisaoPagamentoGrupo membros={membrosComSaldo} itensAlocados={itensAlocados} />
+              <RevisaoPagamentoGrupo
+                membros={membrosComSaldo}
+                itensAlocados={itensAlocados}
+                creditosUsados={creditosUsados}
+                limitesCreditos={limitesCreditos}
+                onCreditoChange={handleCreditoChange}
+              />
             </TabsContent>
             {membrosComSaldo.map(({ cliente }) => (
               <TabsContent

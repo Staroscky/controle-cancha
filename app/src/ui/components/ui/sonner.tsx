@@ -37,6 +37,9 @@ const Toaster = ({ ...props }: ToasterProps) => {
       toastOptions={{
         classNames: {
           toast: "cn-toast",
+          closeButton:
+            "!static !left-auto !right-auto !top-auto !transform-none !order-last !ml-auto !size-4 !border-0 !bg-transparent !shadow-none",
+          error: "[&_[data-icon]]:text-destructive [&_[data-close-button]]:!text-destructive",
         },
       }}
       {...props}

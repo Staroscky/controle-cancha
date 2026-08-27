@@ -468,6 +468,34 @@ Sistema sugere: "Marcar João como saiu do estabelecimento?"
 
 ---
 
+## 11.2. Uso de crédito (fechamento em grupo)
+
+No fechamento de comanda em grupo (seção 14.1, aba "Geral"), quem está com saldo positivo (crédito) pode ceder parte dele para ajudar a pagar a dívida de outro membro do mesmo grupo, além (ou no lugar) do valor em dinheiro digitado. Isso não existe fora do fechamento em grupo — não há tela dedicada a "usar crédito" avulsa.
+
+- Existe um 5º tipo fixo em `tipos_lancamento`: **Uso de crédito**.
+- `partida_id` é sempre **nulo** — mesma razão do Pagamento (seção 11.1).
+- `valor` é sempre **negativo** (reduz o crédito de quem cedeu), o espelho do Pagamento. Gerado só para o(s) credor(es) que efetivamente cederam uma quantia > 0.
+- `descricao` acompanha a mesma descrição digitada para o fechamento do grupo.
+- A quantia que cada credor pode ceder é limitada ao próprio saldo e ao que ainda falta cobrir do grupo (dinheiro digitado + crédito que outros credores já cederam) — nunca debita mais crédito do que o que será de fato aplicado a algum devedor.
+- Junto com o(s) lançamento(s) de `Uso de crédito`, o fechamento gera os lançamentos de `Pagamento` normais (seção 11.1) para quem recebeu a quantia, na mesma alocação "de quem deve mais para quem deve menos" já usada quando o valor vem só em dinheiro.
+- Depois de confirmado, o credor que zerou o saldo ao ceder o crédito também entra na sugestão de "marcar saída" (seção 14.1), junto dos devedores quitados.
+
+### Exemplo
+
+```text
+Grupo: João (-R$ 12,00) e Maria (+R$ 6,00)
+
+Dono digita R$ 0,00 no campo de dinheiro e usa R$ 6,00 do crédito de Maria:
+→ lançamento: cliente=João, partida_id=null, tipo=Pagamento, valor=+R$ 6,00, descricao="Fechamento do grupo"
+→ lançamento: cliente=Maria, partida_id=null, tipo=Uso de crédito, valor=-R$ 6,00, descricao="Fechamento do grupo"
+
+Novo saldo de João: -R$ 6,00
+Novo saldo de Maria: R$ 0,00
+Sistema sugere marcar Maria como saída (zerou); João continua devendo.
+```
+
+---
+
 ## 12. Modelo de dados (tabelas)
 
 Oito tabelas, ligadas por id:
@@ -484,7 +512,7 @@ equipes
 
 tipos_lancamento
 ├── id
-└── nome            → "Consumo" | "Crédito partida" | "Débito partida" | "Pagamento"
+└── nome            → "Consumo" | "Crédito partida" | "Débito partida" | "Pagamento" | "Uso de crédito"
                        (dado fixo, cadastrado uma vez)
 
 itens_consumo
@@ -551,13 +579,16 @@ Se tipo_id = Consumo:
 
 Se tipo_id = Pagamento:
     partida_id é sempre nulo (acerto geral do cliente, não pertence a uma partida — ver seção 11.1)
+
+Se tipo_id = Uso de crédito:
+    partida_id é sempre nulo (mesma razão do Pagamento — ver seção 11.2)
 ```
 
 Por que separar assim:
 
 - `configuracao_padrao` guarda só os valores sugeridos para pré-preencher uma nova partida (ou conjunto). É só um ponto de partida — os valores que realmente valem ficam sempre copiados para dentro de `partidas`, então mudar o padrão depois não afeta partidas já criadas.
 - `equipes` evita repetir os nomes "Azul"/"Amarela" como texto solto em `participacoes` e `partidas` — se um dia mudar o nome ou adicionar outra equipe, é uma linha só.
-- `tipos_lancamento` faz o mesmo para a natureza do lançamento: em vez de comparar texto livre pra saber se é consumo ou resultado de partida, o sistema consulta pelo `tipo_id`. As 4 linhas são fixas: `Consumo`, `Crédito partida`, `Débito partida`, `Pagamento`.
+- `tipos_lancamento` faz o mesmo para a natureza do lançamento: em vez de comparar texto livre pra saber se é consumo ou resultado de partida, o sistema consulta pelo `tipo_id`. As 5 linhas são fixas: `Consumo`, `Crédito partida`, `Débito partida`, `Pagamento`, `Uso de crédito`.
 - `itens_consumo` é um catálogo opcional para agilizar o lançamento de consumo — não impede lançar um item avulso digitando na hora.
 - `descricao` continua livre, mas agora só carrega o detalhe legível — o item consumido ("Cerveja", "1/3 Cerveja") ou o motivo do crédito/débito ("Crédito de vitória", "Cobrança de derrota"). A categorização confiável fica no `tipo_id`, não no texto.
 - `participacoes` guarda só o vínculo do cliente com a partida (equipe, lado, entrada/saída) — dados que existem uma vez por participação.
@@ -660,12 +691,12 @@ A interface é dividida em 4 abas. Essa divisão é uma sugestão de UX — não
 - Primeiro bloco: **presentes no estabelecimento**, exibidos agrupados exatamente como foram organizados na Aba Clientes (grupos por `grupo_id`, ex.: uma família na mesma mesa) — clientes sem grupo aparecem sozinhos.
 - Cada linha mostra só o(s) nome(s), sem valor. Clicar na linha abre a comanda daquele cliente/grupo num **drawer único** — é o único lugar onde o saldo aparece, para que outras pessoas por perto não vejam o saldo alheio. Abrir outra comanda fecha a anterior (só uma aberta por vez em toda a tela).
 - Quando a linha é um **grupo com mais de um membro**, o drawer tem abas internas: **"Geral"** (padrão) + uma aba por membro.
-  - Aba **"Geral"**: topo lista **todos** os membros do grupo (devedores e em dia) com seu saldo individual — vermelho quando negativo, verde quando ≥ 0, mesma cor usada na Aba Clientes; quem deve também mostra, abaixo do nome, quanto paga e quanto fica devendo com o valor atualmente digitado. Rodapé fixo com **um único campo de valor** (sugerido = soma das dívidas do grupo, editável) e o botão **"Fechar grupo"** — não um campo por pessoa. Ao confirmar, o valor informado é abatido **de quem deve mais para quem deve menos**: quita inteiro quem deve mais primeiro, usa o restante no próximo, e assim por diante — se o valor não cobrir todo mundo, quem deve menos fica com pagamento parcial ou de fora. Por baixo, isso gera um lançamento de `Pagamento` por membro (mesmo tipo e regras da seção 11.1), só para quem recebeu alguma parcela, preservando o saldo e o extrato individual de cada um.
+  - Aba **"Geral"**: topo lista **todos** os membros do grupo (devedores e em dia) com seu saldo individual — vermelho quando negativo, verde quando ≥ 0, mesma cor usada na Aba Clientes; quem deve também mostra, abaixo do nome, quanto paga e quanto fica devendo com o valor atualmente digitado. Quem está em crédito, e só enquanto houver alguém devendo no grupo, mostra um campo "usar crédito para ajudar" — quantia do próprio crédito a ceder para abater a dívida de outro membro, limitada ao próprio saldo e ao que ainda falta cobrir (seção 11.2). Rodapé fixo com **um único campo de valor em dinheiro** (sugerido = soma das dívidas do grupo, editável) e o botão **"Fechar grupo"** — não um campo por pessoa. Ao confirmar, a soma do dinheiro digitado com o crédito cedido é abatida **de quem deve mais para quem deve menos**: quita inteiro quem deve mais primeiro, usa o restante no próximo, e assim por diante — se não cobrir todo mundo, quem deve menos fica com pagamento parcial ou de fora. Por baixo, isso gera um lançamento de `Pagamento` por membro que recebeu alguma parcela (seção 11.1) e um lançamento de `Uso de crédito` por membro que cedeu alguma quantia (seção 11.2), preservando o saldo e o extrato individual de cada um.
   - Aba de um **membro** (ou o próprio drawer, sem abas, quando o cliente não tem grupo): topo mostra o extrato individual completo; rodapé fixo com o botão **"Fechar de [nome]"**, valor sugerido = saldo devedor em módulo, editável para pagamento parcial — gera um lançamento de `Pagamento` (seção 11.1).
   - O botão do rodapé nunca aparece em dobro: o rótulo e a ação trocam conforme a aba ativa (Geral → fecha o grupo; aba de um membro → fecha só aquela pessoa). Só aparece quando a aba ativa tem saldo devedor — cliente/grupo em crédito ou zerado não mostra ação de pagamento.
 - Segundo bloco, um dropdown fechado por padrão ("Outras pendências"): clientes **ausentes** com saldo ≠ 0 — quem já saiu do estabelecimento mas ainda tem conta pendente. Abre o mesmo drawer da comanda.
-- Depois de registrar o pagamento, sugere marcar o cliente (ou os membros do grupo que ficaram quitados) como "saiu do estabelecimento" (ação opcional, um clique).
-- No extrato do cliente, os lançamentos aparecem em ordem crescente por data (do mais antigo para o mais recente). A cor do valor continua indicando débito (vermelho) ou crédito (verde); um ícone à esquerda de cada linha identifica o **tipo** do lançamento — `Consumo` com um ícone de recibo, `Crédito partida`/`Débito partida` com um ícone de troféu (evento de jogo), `Pagamento` com um ícone de dinheiro — assim dá pra reconhecer o tipo de cada linha de relance sem perder a cor vermelho/verde do valor.
+- Depois de registrar o pagamento, sugere marcar o cliente (ou os membros do grupo que ficaram quitados, incluindo quem zerou o saldo cedendo crédito) como "saiu do estabelecimento" (ação opcional, um clique).
+- No extrato do cliente, os lançamentos aparecem em ordem crescente por data (do mais antigo para o mais recente). A cor do valor continua indicando débito (vermelho) ou crédito (verde); um ícone à esquerda de cada linha identifica o **tipo** do lançamento — `Consumo` com um ícone de recibo, `Crédito partida`/`Débito partida` com um ícone de troféu (evento de jogo), `Pagamento` com um ícone de dinheiro, `Uso de crédito` com um ícone de mão oferecendo moedas — assim dá pra reconhecer o tipo de cada linha de relance sem perder a cor vermelho/verde do valor.
 
 ---
 
@@ -747,6 +778,15 @@ Não participa:
 Lançamento "Pagamento" = +valor recebido (parcial ou total)
 partida_id sempre nulo
 Não marca o cliente como "saiu" automaticamente — apenas sugere (seção 3.1)
+```
+
+### Uso de crédito (fechamento em grupo)
+
+```text
+Lançamento "Uso de crédito" = -valor cedido (parcial ou total do próprio crédito)
+partida_id sempre nulo
+Só existe junto de um fechamento de grupo (seção 11.2), gerado junto com os
+lançamentos "Pagamento" de quem recebeu a quantia
 ```
 
 ### Saldo acumulado

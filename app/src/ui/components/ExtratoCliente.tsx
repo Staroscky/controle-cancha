@@ -1,4 +1,4 @@
-import { Banknote, ChevronLeft, ChevronRight, Receipt, Trophy } from 'lucide-react'
+import { Banknote, ChevronLeft, ChevronRight, HandCoins, Receipt, Trophy } from 'lucide-react'
 import { useState } from 'react'
 import {
   agruparLancamentosPorDia,
@@ -23,6 +23,8 @@ function IconeDoLancamento({ tipoId, className }: { tipoId: string; className?: 
       return <Trophy className={className} />
     case TIPO_LANCAMENTO_IDS.pagamento:
       return <Banknote className={className} />
+    case TIPO_LANCAMENTO_IDS.usoCredito:
+      return <HandCoins className={className} />
     default:
       return <Receipt className={className} />
   }

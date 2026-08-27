@@ -12,6 +12,7 @@ import {
   prepararLancamentosPagamentoGrupo,
   type ItemPagamentoGrupo,
 } from '@/domain/rules/prepararLancamentosPagamentoGrupo'
+import { prepararLancamentosUsoCreditoGrupo } from '@/domain/rules/prepararLancamentosUsoCreditoGrupo'
 import type { Cliente } from '@/domain/types/Cliente'
 import type { Grupo } from '@/domain/types/Grupo'
 import type { ItemConsumo } from '@/domain/types/ItemConsumo'
@@ -51,8 +52,11 @@ export function useComandas() {
   )
 
   const registrarPagamentoGrupo = useCallback(
-    (itens: ItemPagamentoGrupo[], descricao: string): boolean => {
-      const novosLancamentos = prepararLancamentosPagamentoGrupo(itens, descricao)
+    (itens: ItemPagamentoGrupo[], descricao: string, usosCredito: ItemPagamentoGrupo[] = []): boolean => {
+      const novosLancamentos = [
+        ...prepararLancamentosPagamentoGrupo(itens, descricao),
+        ...prepararLancamentosUsoCreditoGrupo(usosCredito, descricao),
+      ]
       if (novosLancamentos.length === 0) return false
 
       novosLancamentos.forEach(adicionarLancamento)
