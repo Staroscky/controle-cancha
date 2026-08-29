@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { agruparClientesPorGrupo } from '@/domain/rules/agruparClientesPorGrupo'
+import { agruparClientesPorGrupo, type Bloco } from '@/domain/rules/agruparClientesPorGrupo'
 import type { Cliente } from '@/domain/types/Cliente'
 import type { Grupo } from '@/domain/types/Grupo'
 import type { ItemConsumo } from '@/domain/types/ItemConsumo'
@@ -76,6 +76,16 @@ export function LancarConsumoSheet({
   function toggleCliente(id: string) {
     setClienteIds((atuais) =>
       atuais.includes(id) ? atuais.filter((c) => c !== id) : [...atuais, id],
+    )
+  }
+
+  function toggleGrupo(bloco: Bloco) {
+    const idsGrupo = bloco.membros.map((m) => m.id)
+    const todosSelecionados = idsGrupo.every((id) => clienteIds.includes(id))
+    setClienteIds((atuais) =>
+      todosSelecionados
+        ? atuais.filter((id) => !idsGrupo.includes(id))
+        : [...atuais, ...idsGrupo.filter((id) => !atuais.includes(id))],
     )
   }
 
@@ -202,9 +212,15 @@ export function LancarConsumoSheet({
               {blocosClientes.map((bloco) => (
                 <div key={bloco.grupoId ?? bloco.membros[0].id}>
                   {bloco.grupoId && (
-                    <div className="bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
-                      {bloco.nome || 'Grupo'}
-                    </div>
+                    <label className="flex cursor-pointer items-center gap-2 bg-muted px-3 py-1 text-xs font-medium text-muted-foreground hover:bg-muted/80">
+                      <input
+                        type="checkbox"
+                        className="size-3.5 accent-foreground"
+                        checked={bloco.membros.every((m) => clienteIds.includes(m.id))}
+                        onChange={() => toggleGrupo(bloco)}
+                      />
+                      <span>{bloco.nome || 'Grupo'}</span>
+                    </label>
                   )}
                   {bloco.membros.map((cliente) => (
                     <label
