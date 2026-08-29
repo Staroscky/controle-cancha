@@ -1,5 +1,5 @@
 import { Banknote, ChevronLeft, ChevronRight, HandCoins, Receipt, Trophy } from 'lucide-react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   agruparLancamentosPorDia,
   chaveDoDia,
@@ -88,6 +88,17 @@ function NavegacaoDia({ rotulo, podeVoltar, podeAvancar, onVoltar, onAvancar }: 
   )
 }
 
+function EstadoVazioConsumo({ nome }: { nome: string }) {
+  return (
+    <div className="flex h-full flex-col items-center justify-center gap-3 py-10 text-center">
+      <span className="flex size-16 items-center justify-center rounded-full bg-muted text-muted-foreground">
+        <Banknote className="size-7" />
+      </span>
+      <p className="text-sm text-muted-foreground">{nome} ainda não consumiu nada hoje.</p>
+    </div>
+  )
+}
+
 function ItemLancamento({ lancamento }: { lancamento: LancamentoFinanceiro }) {
   return (
     <li className="flex items-center justify-between gap-3 rounded-2xl bg-muted px-4 py-3">
@@ -118,8 +129,16 @@ type ExtratoClienteProps = {
 }
 
 export function ExtratoCliente({ cliente, lancamentos }: ExtratoClienteProps) {
-  const grupos = agruparLancamentosPorDia(lancamentos)
   const saldoAtual = calcularSaldo(lancamentos, cliente.id)
+  // Ao abrir a comanda, o dia selecionado deve ser sempre hoje — mesmo sem lançamento algum
+  // ainda hoje (histórico anterior existente ou cliente que nunca consumiu). Por isso, quando o
+  // último grupo real não é de hoje (ou não existe nenhum), um grupo vazio de hoje é injetado.
+  const grupos = useMemo(() => {
+    const base = agruparLancamentosPorDia(lancamentos)
+    const hojeChave = chaveDoDia(new Date().toISOString())
+    if (base[base.length - 1]?.data === hojeChave) return base
+    return [...base, { data: hojeChave, lancamentos: [], saldoAnterior: saldoAtual, saldoDoDia: saldoAtual }]
+  }, [lancamentos, saldoAtual])
   const indiceUltimoDia = Math.max(grupos.length - 1, 0)
   const [indice, setIndice] = useState(indiceUltimoDia)
   const indiceAtual = Math.min(indice, indiceUltimoDia)
@@ -128,35 +147,35 @@ export function ExtratoCliente({ cliente, lancamentos }: ExtratoClienteProps) {
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-3">
-      {grupoAtual ? (
-        <div className="flex min-h-0 flex-1 flex-col gap-3">
-          <NavegacaoDia
-            rotulo={rotuloDoDia(grupoAtual)}
-            podeVoltar={indiceAtual > 0}
-            podeAvancar={!ehUltimoDia}
-            onVoltar={() => setIndice(indiceAtual - 1)}
-            onAvancar={() => setIndice(indiceAtual + 1)}
-          />
+      <div className="flex min-h-0 flex-1 flex-col gap-3">
+        <NavegacaoDia
+          rotulo={rotuloDoDia(grupoAtual)}
+          podeVoltar={indiceAtual > 0}
+          podeAvancar={!ehUltimoDia}
+          onVoltar={() => setIndice(indiceAtual - 1)}
+          onAvancar={() => setIndice(indiceAtual + 1)}
+        />
 
-          <LinhaSaldo rotulo="Saldo anterior" valor={grupoAtual.saldoAnterior} />
+        <LinhaSaldo rotulo="Saldo anterior" valor={grupoAtual.saldoAnterior} />
 
-          <div className="flex-1 overflow-y-auto pr-1">
+        <div className="flex-1 overflow-y-auto pr-1">
+          {grupoAtual.lancamentos.length === 0 ? (
+            <EstadoVazioConsumo nome={cliente.nome} />
+          ) : (
             <ul className="space-y-2">
               {grupoAtual.lancamentos.map((lancamento) => (
                 <ItemLancamento key={lancamento.id} lancamento={lancamento} />
               ))}
             </ul>
-          </div>
+          )}
         </div>
-      ) : (
-        <p className="flex-1 text-sm text-muted-foreground">Nenhum lançamento para este cliente.</p>
-      )}
+      </div>
 
       <div className="border-t pt-3">
         {ehUltimoDia ? (
           <LinhaSaldo rotulo="Saldo atual" valor={saldoAtual} enfase />
         ) : (
-          <LinhaSaldo rotulo="Saldo do dia" valor={grupoAtual!.saldoDoDia} enfase />
+          <LinhaSaldo rotulo="Saldo do dia" valor={grupoAtual.saldoDoDia} enfase />
         )}
       </div>
     </div>

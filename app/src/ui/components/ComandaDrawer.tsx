@@ -343,13 +343,17 @@ export function ComandaDrawer({
                 value={cliente.id}
                 className="flex min-h-0 flex-1 flex-col overflow-y-auto pt-3 pb-1"
               >
-                <ExtratoCliente cliente={cliente} lancamentos={extratoDoCliente(cliente.id)} />
+                <ExtratoCliente key={aberturaVersao} cliente={cliente} lancamentos={extratoDoCliente(cliente.id)} />
               </TabsContent>
             ))}
           </Tabs>
         ) : (
           <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4">
-            <ExtratoCliente cliente={blocoAtual.membros[0]} lancamentos={extratoDoCliente(blocoAtual.membros[0].id)} />
+            <ExtratoCliente
+              key={aberturaVersao}
+              cliente={blocoAtual.membros[0]}
+              lancamentos={extratoDoCliente(blocoAtual.membros[0].id)}
+            />
           </div>
         )}
 
