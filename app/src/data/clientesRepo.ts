@@ -78,8 +78,11 @@ export function definirPresencaCliente(id: string, presente: boolean): void {
   const clienteAlterado = clientes.find((c) => c.id === id)
   const grupoId = clienteAlterado?.grupoId
   if (!presente && grupoId) {
-    const aindaTemPresente = clientes.some((c) => c.grupoId === grupoId && c.presente)
-    if (!aindaTemPresente) {
+    // Sair do estabelecimento desvincula do grupo (mesma regra de removerClienteDoGrupo):
+    // o cliente ausente não faz mais parte da mesa, mesmo que outros membros continuem presentes.
+    clientes = clientes.map((c) => (c.id === id ? { ...c, grupoId: undefined } : c))
+    const restantes = clientes.filter((c) => c.grupoId === grupoId)
+    if (restantes.length <= 1) {
       clientes = clientes.map((c) => (c.grupoId === grupoId ? { ...c, grupoId: undefined } : c))
       removerGrupo(grupoId)
     }

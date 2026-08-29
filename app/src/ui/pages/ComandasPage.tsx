@@ -20,17 +20,22 @@ export function ComandasPage() {
     registrarPagamentoGrupo,
     marcarSaida,
     marcarSaidaGrupo,
-    excluirHistorico,
-    excluirHistoricoGrupo,
   } = useComandas()
 
-  const [blocoAberto, setBlocoAberto] = useState<Bloco | null>(null)
+  // Guarda só a "chave" da comanda aberta (grupoId, ou o id do cliente quando é solo/ausente),
+  // não o Bloco em si — assim o drawer sempre recebe a versão mais atual dos membros a cada
+  // render (ex.: alguém que saiu do grupo desaparece da lista na hora, sem precisar reabrir).
+  const [chaveAberta, setChaveAberta] = useState<string | null>(null)
   const [outrasAbertas, setOutrasAbertas] = useState(false)
   const [filtro, setFiltro] = useState('')
 
   const presentes = clientes.filter((c) => c.presente)
   const blocosPresentes = agruparClientesPorGrupo(presentes, grupos)
   const ausentesComSaldo = clientes.filter((c) => !c.presente && saldoDoCliente(c.id) !== 0)
+
+  const chaveDoBloco = (bloco: Bloco) => bloco.grupoId ?? bloco.membros[0].id
+  const todosOsBlocos = [...blocosPresentes, ...ausentesComSaldo.map((cliente) => ({ membros: [cliente] }))]
+  const blocoAberto = chaveAberta ? (todosOsBlocos.find((b) => chaveDoBloco(b) === chaveAberta) ?? null) : null
 
   const termo = filtro.trim().toLowerCase()
   const correspondeAoFiltro = (nomes: (string | undefined)[]) =>
@@ -44,8 +49,8 @@ export function ComandasPage() {
   )
 
   function renderBloco(bloco: Bloco) {
-    const chave = bloco.grupoId ?? bloco.membros[0].id
-    return <ComandaBloco key={chave} bloco={bloco} onAbrir={setBlocoAberto} />
+    const chave = chaveDoBloco(bloco)
+    return <ComandaBloco key={chave} bloco={bloco} onAbrir={() => setChaveAberta(chave)} />
   }
 
   return (
@@ -111,15 +116,13 @@ export function ComandasPage() {
 
       <ComandaDrawer
         bloco={blocoAberto}
-        onFechar={() => setBlocoAberto(null)}
+        onFechar={() => setChaveAberta(null)}
         saldoDoCliente={saldoDoCliente}
         extratoDoCliente={extratoDoCliente}
         onRegistrarPagamento={registrarPagamento}
         onRegistrarPagamentoGrupo={registrarPagamentoGrupo}
         onMarcarSaida={marcarSaida}
         onMarcarSaidaGrupo={marcarSaidaGrupo}
-        onExcluirHistorico={excluirHistorico}
-        onExcluirHistoricoGrupo={excluirHistoricoGrupo}
       />
     </div>
   )

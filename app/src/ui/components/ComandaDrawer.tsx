@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import type { Bloco } from '@/domain/rules/agruparClientesPorGrupo'
 import { alocarPagamentoGrupo } from '@/domain/rules/alocarPagamentoGrupo'
@@ -40,17 +41,80 @@ type ComandaDrawerProps = {
   ) => boolean
   onMarcarSaida: (clienteId: string) => void
   onMarcarSaidaGrupo: (clienteIds: string[]) => void
-  onExcluirHistorico: (clienteId: string) => void
-  onExcluirHistoricoGrupo: (clienteIds: string[]) => void
 }
 
-// Pedido de confirmação pendente (marcar saída ou excluir histórico), aberto depois que
-// uma comanda é fechada. `saldoZerado` decide se, depois de resolvido o pedido de saída,
-// o pedido de exclusão de histórico também deve ser oferecido.
+// Pedido de confirmação de saída pendente, aberto depois que uma comanda é fechada.
 type PedidoPendente = {
   clienteIds: string[]
   nomes: string
-  saldoZerado: boolean
+}
+
+// Com grupos grandes, a lista de abas (uma por membro) não cabe na largura do drawer e os
+// TabsTrigger espremem até virar ilegíveis/impossíveis de clicar. Este wrapper transforma a
+// lista numa faixa rolável horizontalmente, com setas e um degradê nas bordas que só aparecem
+// quando há mais conteúdo pra rolar naquela direção.
+function AbasRolaveis({ children }: { children: React.ReactNode }) {
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const [podeRolarEsquerda, setPodeRolarEsquerda] = useState(false)
+  const [podeRolarDireita, setPodeRolarDireita] = useState(false)
+
+  const atualizarSetas = useCallback(() => {
+    const el = scrollRef.current
+    if (!el) return
+    setPodeRolarEsquerda(el.scrollLeft > 1)
+    setPodeRolarDireita(el.scrollLeft + el.clientWidth < el.scrollWidth - 1)
+  }, [])
+
+  useEffect(() => {
+    const el = scrollRef.current
+    atualizarSetas()
+    if (!el) return
+    const observer = new ResizeObserver(atualizarSetas)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [atualizarSetas, children])
+
+  function rolar(direcao: 1 | -1) {
+    scrollRef.current?.scrollBy({ left: direcao * 160, behavior: 'smooth' })
+  }
+
+  return (
+    <div className="relative">
+      {podeRolarEsquerda && (
+        <>
+          <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-8 bg-gradient-to-r from-background to-transparent" />
+          <button
+            type="button"
+            onClick={() => rolar(-1)}
+            aria-label="Rolar abas para a esquerda"
+            className="absolute top-1/2 left-0.5 z-20 flex size-6 -translate-y-1/2 items-center justify-center rounded-full border bg-background text-muted-foreground shadow-sm transition-colors hover:text-foreground"
+          >
+            <ChevronLeft className="size-3.5" />
+          </button>
+        </>
+      )}
+      <div
+        ref={scrollRef}
+        onScroll={atualizarSetas}
+        className="overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
+        {children}
+      </div>
+      {podeRolarDireita && (
+        <>
+          <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-8 bg-gradient-to-l from-background to-transparent" />
+          <button
+            type="button"
+            onClick={() => rolar(1)}
+            aria-label="Rolar abas para a direita"
+            className="absolute top-1/2 right-0.5 z-20 flex size-6 -translate-y-1/2 items-center justify-center rounded-full border bg-background text-muted-foreground shadow-sm transition-colors hover:text-foreground"
+          >
+            <ChevronRight className="size-3.5" />
+          </button>
+        </>
+      )}
+    </div>
+  )
 }
 
 export function ComandaDrawer({
@@ -62,8 +126,6 @@ export function ComandaDrawer({
   onRegistrarPagamentoGrupo,
   onMarcarSaida,
   onMarcarSaidaGrupo,
-  onExcluirHistorico,
-  onExcluirHistoricoGrupo,
 }: ComandaDrawerProps) {
   // Mantém o conteúdo montado durante a animação de fechar (Sheet fica com open=false,
   // mas o último bloco selecionado continua renderizado até o Sheet ser desmontado).
@@ -83,17 +145,43 @@ export function ComandaDrawer({
   const [descricao, setDescricao] = useState('')
   const [creditosUsados, setCreditosUsados] = useState<Record<string, string>>({})
   const [pedidoSaida, setPedidoSaida] = useState<PedidoPendente | null>(null)
-  const [pedidoExcluirHistorico, setPedidoExcluirHistorico] = useState<PedidoPendente | null>(null)
+  // Incrementado a cada pagamento registrado, pra forçar o recálculo do valor sugerido
+  // (saldo devedor após o pagamento) sem fechar o drawer — ver handleConfirmar* abaixo.
+  const [pagamentoVersao, setPagamentoVersao] = useState(0)
+
+  // Identifica a comanda (grupo ou cliente solo) independente do conteúdo dela — o pai agora
+  // recria o Bloco a cada render (pra refletir membros que saíram do grupo etc.), então não dá
+  // mais pra usar a referência de `bloco` como sinal de "abriu uma comanda diferente".
+  const chaveAbertaRef = useRef<string | null>(null)
+  // Incrementado a cada (re)abertura de comanda — não dá pra confiar só na mudança de `aba` pra
+  // isso, porque reabrir a MESMA comanda reseta pro mesmo valor de aba (ex.: 'geral' -> 'geral'),
+  // o que não dispara o efeito de recálculo do valor abaixo.
+  const [aberturaVersao, setAberturaVersao] = useState(0)
 
   useEffect(() => {
-    if (blocoAtual) {
-      setAba(temAbas ? 'geral' : blocoAtual.membros[0].id)
+    if (!bloco) {
+      chaveAbertaRef.current = null
+      return
     }
-    // toda vez que a comanda é (re)aberta, volta pra aba padrão — não usar `chave`
-    // aqui: reabrir a MESMA comanda não muda `chave`, mas o saldo pode ter mudado
-    // enquanto ela estava fechada (bug: campo de valor ficava travado no saldo antigo)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const chave = bloco.grupoId ?? bloco.membros[0].id
+    if (chave === chaveAbertaRef.current) return
+    chaveAbertaRef.current = chave
+    // toda vez que a comanda é (re)aberta, volta pra aba padrão — reabrir a MESMA comanda
+    // depois de fechada também deve resetar: o saldo pode ter mudado enquanto ela estava
+    // fechada (bug antigo: campo de valor ficava travado no saldo antigo)
+    setAba(bloco.grupoId && bloco.membros.length > 1 ? 'geral' : bloco.membros[0].id)
+    setAberturaVersao((v) => v + 1)
   }, [bloco])
+
+  // Se a aba ativa era de um membro que saiu do grupo (ex.: marcou saída individualmente
+  // enquanto o dono via a comanda dele), cai pra "Geral" (ou pro único membro que sobrou).
+  useEffect(() => {
+    if (!blocoAtual || aba === 'geral') return
+    const aindaNoGrupo = blocoAtual.membros.some((m) => m.id === aba)
+    if (!aindaNoGrupo) {
+      setAba(temAbas ? 'geral' : (blocoAtual.membros[0]?.id ?? 'geral'))
+    }
+  }, [blocoAtual, aba, temAbas])
 
   const membrosComSaldo: MembroComSaldo[] = blocoAtual
     ? blocoAtual.membros.map((cliente) => ({ cliente, saldo: saldoDoCliente(cliente.id) }))
@@ -108,9 +196,12 @@ export function ComandaDrawer({
     setValor(String(ehAbaGeral ? totalDevido : Math.abs(membroAtivo?.saldo ?? 0)))
     setDescricao('')
     setCreditosUsados({})
-    // recalcula o valor sugerido sempre que a comanda é (re)aberta ou a aba muda
+    // recalcula o valor sugerido sempre que a comanda é (re)aberta (aberturaVersao), a aba muda,
+    // ou um pagamento acabou de ser registrado (pagamentoVersao) — nunca por causa de um
+    // re-render qualquer do pai (ex.: digitar no filtro de busca), já que não depende mais da
+    // referência (sempre nova) de `bloco`
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bloco, aba])
+  }, [aberturaVersao, aba, pagamentoVersao])
 
   if (!blocoAtual) return null
 
@@ -169,7 +260,7 @@ export function ComandaDrawer({
       .filter((item) => item.valor >= (membrosComSaldo.find((m) => m.cliente.id === item.clienteId)?.saldo ?? 0))
       .map((item) => item.clienteId)
     const quitados = [...devedoresQuitados, ...credoresZerados]
-    onFechar()
+    setPagamentoVersao((v) => v + 1)
     toast.success(`Pagamento do grupo${blocoAtual.nome ? ` ${blocoAtual.nome}` : ''} registrado.`)
     if (quitados.length > 0) {
       const nomes = quitados
@@ -178,7 +269,7 @@ export function ComandaDrawer({
         .join(', ')
       // devedoresQuitados e credoresZerados só entram nessa lista quando o pagamento/crédito
       // cedido cobriu exatamente o saldo devido/disponível — o saldo resultante é sempre zero.
-      setPedidoSaida({ clienteIds: quitados, nomes, saldoZerado: true })
+      setPedidoSaida({ clienteIds: quitados, nomes })
     }
   }
 
@@ -194,10 +285,14 @@ export function ComandaDrawer({
       toast.error('Informe um valor válido (maior que zero).')
       return
     }
-    onFechar()
+    setPagamentoVersao((v) => v + 1)
     toast.success(`Pagamento de ${membroAtivo.cliente.nome} registrado.`)
     const saldoZerado = Math.abs(membroAtivo.saldo + valorNumerico) < 0.005
-    setPedidoSaida({ clienteIds: [membroAtivo.cliente.id], nomes: membroAtivo.cliente.nome, saldoZerado })
+    // só sugere marcar saída quando o pagamento zera o saldo — pagamento parcial
+    // apenas registra e mantém a comanda aberta (ver docs/regras.md seção 11.1)
+    if (saldoZerado) {
+      setPedidoSaida({ clienteIds: [membroAtivo.cliente.id], nomes: membroAtivo.cliente.nome })
+    }
   }
 
   function handleConfirmarSaida() {
@@ -206,15 +301,6 @@ export function ComandaDrawer({
       onMarcarSaidaGrupo(pedidoSaida.clienteIds)
     } else {
       onMarcarSaida(pedidoSaida.clienteIds[0])
-    }
-  }
-
-  function handleConfirmarExcluirHistorico() {
-    if (!pedidoExcluirHistorico) return
-    if (pedidoExcluirHistorico.clienteIds.length > 1) {
-      onExcluirHistoricoGrupo(pedidoExcluirHistorico.clienteIds)
-    } else {
-      onExcluirHistorico(pedidoExcluirHistorico.clienteIds[0])
     }
   }
 
@@ -232,14 +318,16 @@ export function ComandaDrawer({
 
         {temAbas ? (
           <Tabs value={aba} onValueChange={setAba} className="flex min-h-0 flex-1 flex-col px-4">
-            <TabsList>
-              <TabsTrigger value="geral">Geral</TabsTrigger>
-              {membrosComSaldo.map(({ cliente }) => (
-                <TabsTrigger key={cliente.id} value={cliente.id}>
-                  {cliente.nome}
-                </TabsTrigger>
-              ))}
-            </TabsList>
+            <AbasRolaveis>
+              <TabsList className="w-max">
+                <TabsTrigger value="geral">Geral</TabsTrigger>
+                {membrosComSaldo.map(({ cliente }) => (
+                  <TabsTrigger key={cliente.id} value={cliente.id}>
+                    {cliente.nome}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </AbasRolaveis>
             <TabsContent value="geral" className="flex min-h-0 flex-1 flex-col overflow-y-auto pt-3 pb-1">
               <RevisaoPagamentoGrupo
                 membros={membrosComSaldo}
@@ -274,7 +362,7 @@ export function ComandaDrawer({
                   onValorChange={setValor}
                   descricao={descricao}
                   onDescricaoChange={setDescricao}
-                  rotuloBotao="Fechar grupo"
+                  rotuloBotao="Registrar pagamento do grupo"
                   onConfirmar={handleConfirmarGrupo}
                 />
               )
@@ -286,21 +374,14 @@ export function ComandaDrawer({
                   onValorChange={setValor}
                   descricao={descricao}
                   onDescricaoChange={setDescricao}
-                  rotuloBotao={`Fechar de ${membroAtivo.cliente.nome}`}
+                  rotuloBotao={`Registrar pagamento de ${membroAtivo.cliente.nome}`}
                   onConfirmar={handleConfirmarIndividual}
                 />
               )}
         </SheetFooter>
       </SheetContent>
 
-      <AlertDialog
-        open={!!pedidoSaida}
-        onOpenChange={(aberto) => {
-          if (aberto) return
-          setPedidoSaida(null)
-          if (pedidoSaida?.saldoZerado) setPedidoExcluirHistorico(pedidoSaida)
-        }}
-      >
+      <AlertDialog open={!!pedidoSaida} onOpenChange={(aberto) => !aberto && setPedidoSaida(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Marcar saída</AlertDialogTitle>
@@ -311,27 +392,6 @@ export function ComandaDrawer({
           <AlertDialogFooter>
             <AlertDialogCancel>Agora não</AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirmarSaida}>Marcar saída</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <AlertDialog
-        open={!!pedidoExcluirHistorico}
-        onOpenChange={(aberto) => !aberto && setPedidoExcluirHistorico(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Excluir histórico</AlertDialogTitle>
-            <AlertDialogDescription>
-              O saldo de {pedidoExcluirHistorico?.nomes} está zerado. Deseja excluir o histórico de
-              lançamentos? Essa ação não pode ser desfeita.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Manter histórico</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmarExcluirHistorico}>
-              Excluir histórico
-            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

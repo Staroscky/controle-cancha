@@ -116,6 +116,7 @@ Além da participação em uma partida específica (seção 3), existe um contro
 - Um cliente só pode ser adicionado a uma partida (seção 2) ou entrar no rateio de um consumo (seção 10) se estiver marcado como presente.
 - **Sair do estabelecimento não exige saldo zerado.** O cliente pode sair com saldo pendente; o saldo continua registrado normalmente e pode ser acertado depois (seção 11), inclusive com o cliente já ausente.
 - Registrar um pagamento (seção 11.1) não marca o cliente como "saiu" automaticamente — o sistema apenas **sugere** essa ação, e o dono decide.
+- **Marcar a saída de um cliente que faz parte de um grupo o desvincula do grupo**, mesmo que os demais membros continuem presentes — ele passa a aparecer sozinho na Aba Comandas. Se isso deixar o grupo com apenas 1 membro (ou nenhum), o grupo também é desfeito. Ao retornar, o cliente pode ser reagrupado manualmente na Aba Clientes.
 
 ---
 
@@ -695,7 +696,7 @@ A interface é dividida em 4 abas. Essa divisão é uma sugestão de UX — não
   - Aba de um **membro** (ou o próprio drawer, sem abas, quando o cliente não tem grupo): topo mostra o extrato individual completo; rodapé fixo com o botão **"Fechar de [nome]"**, valor sugerido = saldo devedor em módulo, editável para pagamento parcial — gera um lançamento de `Pagamento` (seção 11.1).
   - O botão do rodapé nunca aparece em dobro: o rótulo e a ação trocam conforme a aba ativa (Geral → fecha o grupo; aba de um membro → fecha só aquela pessoa). Só aparece quando a aba ativa tem saldo devedor — cliente/grupo em crédito ou zerado não mostra ação de pagamento.
 - Segundo bloco, um dropdown fechado por padrão ("Outras pendências"): clientes **ausentes** com saldo ≠ 0 — quem já saiu do estabelecimento mas ainda tem conta pendente. Abre o mesmo drawer da comanda.
-- Depois de registrar o pagamento, um modal de confirmação pergunta se deve marcar o cliente (ou os membros do grupo que ficaram quitados, incluindo quem zerou o saldo cedendo crédito) como "saiu do estabelecimento" — ação opcional, o dono pode recusar. Quando o saldo resultante for zero, ao fechar esse modal (confirmando ou não a saída) aparece um segundo modal perguntando se deve excluir o histórico de lançamentos daquele cliente (ou dos membros do grupo que zeraram) — também opcional e recusável; se confirmado, apaga os lançamentos financeiros dessas pessoas (o saldo, já zerado, continua zerado).
+- Depois de registrar o pagamento, um modal de confirmação pergunta se deve marcar o cliente (ou os membros do grupo que ficaram quitados, incluindo quem zerou o saldo cedendo crédito) como "saiu do estabelecimento" — ação opcional, o dono pode recusar. O histórico de lançamentos nunca é excluído: mesmo com o saldo zerado, os lançamentos financeiros permanecem registrados para consulta no extrato.
 - No extrato do cliente, os lançamentos aparecem em ordem crescente por data (do mais antigo para o mais recente). A cor do valor continua indicando débito (vermelho) ou crédito (verde); um ícone à esquerda de cada linha identifica o **tipo** do lançamento — `Consumo` com um ícone de recibo, `Crédito partida`/`Débito partida` com um ícone de troféu (evento de jogo), `Pagamento` com um ícone de dinheiro, `Uso de crédito` com um ícone de mão oferecendo moedas — assim dá pra reconhecer o tipo de cada linha de relance sem perder a cor vermelho/verde do valor.
 
 ---

@@ -26,7 +26,3 @@ export function adicionarLancamento(
   setItem(CHAVE, [...listarLancamentos(), novo])
   return novo
 }
-
-export function removerLancamentosDoCliente(clienteId: string): void {
-  setItem(CHAVE, listarLancamentos().filter((l) => l.clienteId !== clienteId))
-}
