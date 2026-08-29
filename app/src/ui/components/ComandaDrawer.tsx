@@ -286,7 +286,7 @@ export function ComandaDrawer({
       return
     }
     setPagamentoVersao((v) => v + 1)
-    toast.success(`Pagamento de ${membroAtivo.cliente.nome} registrado.`)
+    toast.success('Pagamento registrado.')
     const saldoZerado = Math.abs(membroAtivo.saldo + valorNumerico) < 0.005
     // só sugere marcar saída quando o pagamento zera o saldo — pagamento parcial
     // apenas registra e mantém a comanda aberta (ver docs/regras.md seção 11.1)
@@ -374,7 +374,7 @@ export function ComandaDrawer({
                   onValorChange={setValor}
                   descricao={descricao}
                   onDescricaoChange={setDescricao}
-                  rotuloBotao={`Registrar pagamento de ${membroAtivo.cliente.nome}`}
+                  rotuloBotao="Registrar pagamento"
                   onConfirmar={handleConfirmarIndividual}
                 />
               )}
