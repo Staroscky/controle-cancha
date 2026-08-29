@@ -8,6 +8,16 @@ import { ExtratoCliente } from '@/ui/components/ExtratoCliente'
 import { FormularioFechamento } from '@/ui/components/FormularioFechamento'
 import { RevisaoPagamentoGrupo, type MembroComSaldo } from '@/ui/components/RevisaoPagamentoGrupo'
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/ui/components/ui/alert-dialog'
+import {
   Sheet,
   SheetContent,
   SheetDescription,
@@ -30,6 +40,17 @@ type ComandaDrawerProps = {
   ) => boolean
   onMarcarSaida: (clienteId: string) => void
   onMarcarSaidaGrupo: (clienteIds: string[]) => void
+  onExcluirHistorico: (clienteId: string) => void
+  onExcluirHistoricoGrupo: (clienteIds: string[]) => void
+}
+
+// Pedido de confirmação pendente (marcar saída ou excluir histórico), aberto depois que
+// uma comanda é fechada. `saldoZerado` decide se, depois de resolvido o pedido de saída,
+// o pedido de exclusão de histórico também deve ser oferecido.
+type PedidoPendente = {
+  clienteIds: string[]
+  nomes: string
+  saldoZerado: boolean
 }
 
 export function ComandaDrawer({
@@ -41,6 +62,8 @@ export function ComandaDrawer({
   onRegistrarPagamentoGrupo,
   onMarcarSaida,
   onMarcarSaidaGrupo,
+  onExcluirHistorico,
+  onExcluirHistoricoGrupo,
 }: ComandaDrawerProps) {
   // Mantém o conteúdo montado durante a animação de fechar (Sheet fica com open=false,
   // mas o último bloco selecionado continua renderizado até o Sheet ser desmontado).
@@ -59,6 +82,8 @@ export function ComandaDrawer({
   const [valor, setValor] = useState('')
   const [descricao, setDescricao] = useState('')
   const [creditosUsados, setCreditosUsados] = useState<Record<string, string>>({})
+  const [pedidoSaida, setPedidoSaida] = useState<PedidoPendente | null>(null)
+  const [pedidoExcluirHistorico, setPedidoExcluirHistorico] = useState<PedidoPendente | null>(null)
 
   useEffect(() => {
     if (blocoAtual) {
@@ -145,9 +170,16 @@ export function ComandaDrawer({
       .map((item) => item.clienteId)
     const quitados = [...devedoresQuitados, ...credoresZerados]
     onFechar()
-    toast.success(`Pagamento do grupo${blocoAtual.nome ? ` ${blocoAtual.nome}` : ''} registrado.`, {
-      action: { label: 'Marcar grupo como saída', onClick: () => onMarcarSaidaGrupo(quitados) },
-    })
+    toast.success(`Pagamento do grupo${blocoAtual.nome ? ` ${blocoAtual.nome}` : ''} registrado.`)
+    if (quitados.length > 0) {
+      const nomes = quitados
+        .map((id) => membrosComSaldo.find((m) => m.cliente.id === id)?.cliente.nome)
+        .filter(Boolean)
+        .join(', ')
+      // devedoresQuitados e credoresZerados só entram nessa lista quando o pagamento/crédito
+      // cedido cobriu exatamente o saldo devido/disponível — o saldo resultante é sempre zero.
+      setPedidoSaida({ clienteIds: quitados, nomes, saldoZerado: true })
+    }
   }
 
   function handleConfirmarIndividual() {
@@ -163,9 +195,27 @@ export function ComandaDrawer({
       return
     }
     onFechar()
-    toast.success(`Pagamento de ${membroAtivo.cliente.nome} registrado.`, {
-      action: { label: 'Marcar saída', onClick: () => onMarcarSaida(membroAtivo.cliente.id) },
-    })
+    toast.success(`Pagamento de ${membroAtivo.cliente.nome} registrado.`)
+    const saldoZerado = Math.abs(membroAtivo.saldo + valorNumerico) < 0.005
+    setPedidoSaida({ clienteIds: [membroAtivo.cliente.id], nomes: membroAtivo.cliente.nome, saldoZerado })
+  }
+
+  function handleConfirmarSaida() {
+    if (!pedidoSaida) return
+    if (pedidoSaida.clienteIds.length > 1) {
+      onMarcarSaidaGrupo(pedidoSaida.clienteIds)
+    } else {
+      onMarcarSaida(pedidoSaida.clienteIds[0])
+    }
+  }
+
+  function handleConfirmarExcluirHistorico() {
+    if (!pedidoExcluirHistorico) return
+    if (pedidoExcluirHistorico.clienteIds.length > 1) {
+      onExcluirHistoricoGrupo(pedidoExcluirHistorico.clienteIds)
+    } else {
+      onExcluirHistorico(pedidoExcluirHistorico.clienteIds[0])
+    }
   }
 
   const titulo = blocoAtual.grupoId ? blocoAtual.nome || 'Grupo' : blocoAtual.membros[0].nome
@@ -242,6 +292,49 @@ export function ComandaDrawer({
               )}
         </SheetFooter>
       </SheetContent>
+
+      <AlertDialog
+        open={!!pedidoSaida}
+        onOpenChange={(aberto) => {
+          if (aberto) return
+          setPedidoSaida(null)
+          if (pedidoSaida?.saldoZerado) setPedidoExcluirHistorico(pedidoSaida)
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Marcar saída</AlertDialogTitle>
+            <AlertDialogDescription>
+              Marcar {pedidoSaida?.nomes} como saída do estabelecimento?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Agora não</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmarSaida}>Marcar saída</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={!!pedidoExcluirHistorico}
+        onOpenChange={(aberto) => !aberto && setPedidoExcluirHistorico(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir histórico</AlertDialogTitle>
+            <AlertDialogDescription>
+              O saldo de {pedidoExcluirHistorico?.nomes} está zerado. Deseja excluir o histórico de
+              lançamentos? Essa ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Manter histórico</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmarExcluirHistorico}>
+              Excluir histórico
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Sheet>
   )
 }

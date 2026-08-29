@@ -2,7 +2,12 @@ import { useCallback, useState } from 'react'
 import { definirPresencaCliente, listarClientes } from '@/data/clientesRepo'
 import { listarGrupos } from '@/data/gruposRepo'
 import { listarItensConsumoOrdenados } from '@/data/itensConsumoRepo'
-import { adicionarLancamento, listarLancamentos, listarLancamentosPorCliente } from '@/data/lancamentosRepo'
+import {
+  adicionarLancamento,
+  listarLancamentos,
+  listarLancamentosPorCliente,
+  removerLancamentosDoCliente,
+} from '@/data/lancamentosRepo'
 import { listarParticipacoesPorPartida } from '@/data/participacoesRepo'
 import { listarPartidas } from '@/data/partidasRepo'
 import { calcularSaldo } from '@/domain/rules/calcularSaldo'
@@ -82,6 +87,22 @@ export function useComandas() {
     [recarregar],
   )
 
+  const excluirHistorico = useCallback(
+    (clienteId: string) => {
+      removerLancamentosDoCliente(clienteId)
+      recarregar()
+    },
+    [recarregar],
+  )
+
+  const excluirHistoricoGrupo = useCallback(
+    (clienteIds: string[]) => {
+      clienteIds.forEach(removerLancamentosDoCliente)
+      recarregar()
+    },
+    [recarregar],
+  )
+
   const lancarConsumo = useCallback(
     (descricaoItem: string, valorTotal: number, itemId: string | null, clienteIds: string[]) => {
       const partidaAtiva = listarPartidas().find((p) => p.status === 'em_andamento')
@@ -120,6 +141,8 @@ export function useComandas() {
     registrarPagamentoGrupo,
     marcarSaida,
     marcarSaidaGrupo,
+    excluirHistorico,
+    excluirHistoricoGrupo,
     lancarConsumo,
   }
 }

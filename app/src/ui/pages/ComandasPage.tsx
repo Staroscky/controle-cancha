@@ -20,6 +20,8 @@ export function ComandasPage() {
     registrarPagamentoGrupo,
     marcarSaida,
     marcarSaidaGrupo,
+    excluirHistorico,
+    excluirHistoricoGrupo,
   } = useComandas()
 
   const [blocoAberto, setBlocoAberto] = useState<Bloco | null>(null)
@@ -116,6 +118,8 @@ export function ComandasPage() {
         onRegistrarPagamentoGrupo={registrarPagamentoGrupo}
         onMarcarSaida={marcarSaida}
         onMarcarSaidaGrupo={marcarSaidaGrupo}
+        onExcluirHistorico={excluirHistorico}
+        onExcluirHistoricoGrupo={excluirHistoricoGrupo}
       />
     </div>
   )
