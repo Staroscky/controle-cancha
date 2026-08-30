@@ -29,9 +29,12 @@ type LancarConsumoSheetProps = {
   categorias?: CategoriaConsumo[]
   clientes: Cliente[]
   grupos?: Grupo[]
+  /** Agrupamento alternativo (ex.: por equipe/lado da partida). Quando informado, substitui o agrupamento por grupo. */
+  blocos?: Bloco[]
   onLancar: (descricao: string, valor: number, itemId: string | null, clienteIds: string[]) => void
   clienteIdsPadrao?: string[]
   titulo?: string
+  mensagemSemClientes?: string
 }
 
 export function LancarConsumoSheet({
@@ -39,9 +42,11 @@ export function LancarConsumoSheet({
   categorias,
   clientes,
   grupos,
+  blocos,
   onLancar,
   clienteIdsPadrao,
   titulo,
+  mensagemSemClientes,
 }: LancarConsumoSheetProps) {
   const clientesPresentes = clientes.filter((c) => c.presente)
 
@@ -139,7 +144,9 @@ export function LancarConsumoSheet({
   })
 
   const termoCliente = filtroCliente.trim().toLowerCase()
-  const blocosClientes = agruparClientesPorGrupo(clientesPresentes, grupos ?? []).filter(
+  const blocosBase = blocos ?? agruparClientesPorGrupo(clientesPresentes, grupos ?? [])
+  const totalClientesBase = blocosBase.reduce((total, bloco) => total + bloco.membros.length, 0)
+  const blocosClientes = blocosBase.filter(
     (bloco) =>
       !termoCliente ||
       [bloco.nome, ...bloco.membros.map((m) => m.nome)].some((nome) =>
@@ -227,7 +234,7 @@ export function LancarConsumoSheet({
             <span className="text-sm font-medium">
               Clientes {clienteIds.length > 0 && `(${clienteIds.length} selecionado${clienteIds.length > 1 ? 's' : ''})`}
             </span>
-            {clientesPresentes.length > 0 && (
+            {totalClientesBase > 0 && (
               <Input
                 placeholder="Filtrar cliente ou grupo..."
                 value={filtroCliente}
@@ -265,13 +272,15 @@ export function LancarConsumoSheet({
                   ))}
                 </div>
               ))}
-              {clientesPresentes.length > 0 && blocosClientes.length === 0 && (
+              {totalClientesBase > 0 && blocosClientes.length === 0 && (
                 <p className="px-3 py-2 text-xs text-muted-foreground">
                   Nenhum cliente encontrado para "{filtroCliente}".
                 </p>
               )}
-              {clientesPresentes.length === 0 && (
-                <p className="px-3 py-2 text-xs text-muted-foreground">Nenhum cliente presente no momento.</p>
+              {totalClientesBase === 0 && (
+                <p className="px-3 py-2 text-xs text-muted-foreground">
+                  {mensagemSemClientes ?? 'Nenhum cliente presente no momento.'}
+                </p>
               )}
             </div>
           </div>

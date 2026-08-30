@@ -15,6 +15,7 @@ import {
   listarPartidas,
 } from '@/data/partidasRepo'
 import { calcularNumeroPartidaDoDia } from '@/domain/rules/calcularNumeroPartidaDoDia'
+import { prepararLancamentosConsumo } from '@/domain/rules/prepararLancamentosConsumo'
 import { prepararLancamentosFechamentoPartida } from '@/domain/rules/prepararLancamentosFechamentoPartida'
 import type { Lado, Participacao } from '@/domain/types/Participacao'
 import type { Partida } from '@/domain/types/Partida'
@@ -118,6 +119,26 @@ export function usePartidaAtiva() {
     [partida, recarregar],
   )
 
+  const lancarConsumo = useCallback(
+    (descricao: string, valor: number, itemId: string | null, clienteIds: string[]) => {
+      if (!partida) return
+      const participacoesAtivas = participacoes.filter((p) => p.status === 'ativo')
+      const obterPartidaIdDoCliente = (clienteId: string) =>
+        participacoesAtivas.some((p) => p.clienteId === clienteId) ? partida.id : null
+
+      const lancamentos = prepararLancamentosConsumo(
+        clienteIds,
+        descricao,
+        valor,
+        itemId,
+        obterPartidaIdDoCliente,
+      )
+      lancamentos.forEach((lancamento) => adicionarLancamento(lancamento))
+      recarregar(partida)
+    },
+    [partida, participacoes, recarregar],
+  )
+
   const concluir = useCallback(
     (equipeVencedoraId: string) => {
       if (!partida) return
@@ -147,5 +168,6 @@ export function usePartidaAtiva() {
     inverterEquipes,
     registrarSaida,
     concluir,
+    lancarConsumo,
   }
 }
