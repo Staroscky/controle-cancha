@@ -1,6 +1,8 @@
 import { normalizarNomeCliente } from '../domain/rules/normalizarNomeCliente'
 import type { Cliente } from '../domain/types/Cliente'
 import { criarGrupo, removerGrupo } from './gruposRepo'
+import { listarParticipacoesPorPartida, registrarSaidaParticipacao } from './participacoesRepo'
+import { listarPartidas } from './partidasRepo'
 import { getItem, setItem } from './storage'
 
 const CHAVE = 'bocha:clientes'
@@ -73,6 +75,18 @@ export function removerCliente(id: string): void {
 }
 
 export function definirPresencaCliente(id: string, presente: boolean): void {
+  // Marcar saída também precisa encerrar a participação ativa do cliente na partida em
+  // andamento — senão ele continua contando como jogador ativo mesmo depois de ir embora.
+  if (!presente) {
+    const partidaAtiva = listarPartidas().find((p) => p.status === 'em_andamento')
+    if (partidaAtiva) {
+      const participacaoAtiva = listarParticipacoesPorPartida(partidaAtiva.id).find(
+        (p) => p.clienteId === id && p.status === 'ativo',
+      )
+      if (participacaoAtiva) registrarSaidaParticipacao(participacaoAtiva.id)
+    }
+  }
+
   let clientes = listarClientes().map((c) => (c.id === id ? { ...c, presente } : c))
 
   const clienteAlterado = clientes.find((c) => c.id === id)
