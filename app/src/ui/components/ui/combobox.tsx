@@ -13,6 +13,8 @@ import {
 export type ComboboxOption = {
   value: string
   label: string
+  icon?: React.ReactNode
+  group?: string
 }
 
 type ComboboxProps = {
@@ -43,6 +45,11 @@ function Combobox({
   const filtrados = options.filter((option) =>
     option.label.toLowerCase().includes(busca.trim().toLowerCase()),
   )
+  const grupos = new Map<string, ComboboxOption[]>()
+  for (const option of filtrados) {
+    const chave = option.group ?? ''
+    grupos.set(chave, [...(grupos.get(chave) ?? []), option])
+  }
 
   function abrir(proximoAberto: boolean) {
     setAberto(proximoAberto)
@@ -69,7 +76,10 @@ function Combobox({
             className,
           )}
         >
-          <span className="truncate">{selecionado?.label ?? placeholder}</span>
+          <span className="flex min-w-0 items-center gap-2 truncate">
+            {selecionado?.icon}
+            <span className="truncate">{selecionado?.label ?? placeholder}</span>
+          </span>
           <ChevronsUpDown className="size-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -87,21 +97,29 @@ function Combobox({
           {filtrados.length === 0 && (
             <p className="px-3 py-2 text-xs text-muted-foreground">{emptyText}</p>
           )}
-          {filtrados.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => escolher(option.value)}
-              className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-muted"
-            >
-              <Check
-                className={cn(
-                  "size-4 shrink-0",
-                  option.value === value ? "opacity-100" : "opacity-0",
-                )}
-              />
-              <span className="truncate">{option.label}</span>
-            </button>
+          {Array.from(grupos.entries()).map(([grupo, opcoesDoGrupo]) => (
+            <div key={grupo || "_sem_grupo_"}>
+              {grupo && (
+                <p className="px-3 py-1 text-xs font-medium text-muted-foreground">{grupo}</p>
+              )}
+              {opcoesDoGrupo.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => escolher(option.value)}
+                  className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-muted"
+                >
+                  <Check
+                    className={cn(
+                      "size-4 shrink-0",
+                      option.value === value ? "opacity-100" : "opacity-0",
+                    )}
+                  />
+                  {option.icon}
+                  <span className="truncate">{option.label}</span>
+                </button>
+              ))}
+            </div>
           ))}
         </div>
       </PopoverContent>

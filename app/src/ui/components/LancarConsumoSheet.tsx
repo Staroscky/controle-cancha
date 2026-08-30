@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { agruparClientesPorGrupo, type Bloco } from '@/domain/rules/agruparClientesPorGrupo'
+import type { CategoriaConsumo } from '@/domain/types/CategoriaConsumo'
 import type { Cliente } from '@/domain/types/Cliente'
 import type { Grupo } from '@/domain/types/Grupo'
 import type { ItemConsumo } from '@/domain/types/ItemConsumo'
+import { CategoriaIcon } from '@/ui/components/CategoriaIcon'
 import { Button } from '@/ui/components/ui/button'
 import { Combobox } from '@/ui/components/ui/combobox'
 import { Input } from '@/ui/components/ui/input'
@@ -20,8 +22,11 @@ import {
 
 type Origem = 'catalogo' | 'avulso'
 
+const SEM_CATEGORIA = 'Sem categoria'
+
 type LancarConsumoSheetProps = {
   itens: ItemConsumo[]
+  categorias?: CategoriaConsumo[]
   clientes: Cliente[]
   grupos?: Grupo[]
   onLancar: (descricao: string, valor: number, itemId: string | null, clienteIds: string[]) => void
@@ -31,6 +36,7 @@ type LancarConsumoSheetProps = {
 
 export function LancarConsumoSheet({
   itens,
+  categorias,
   clientes,
   grupos,
   onLancar,
@@ -111,6 +117,27 @@ export function LancarConsumoSheet({
     setAberto(false)
   }
 
+  const categoriasPorId = new Map((categorias ?? []).map((c) => [c.id, c]))
+  const itensOrdenadosPorCategoria = [...itens].sort((a, b) => {
+    const nomeCategoriaA = a.categoriaId ? (categoriasPorId.get(a.categoriaId)?.nome ?? '') : ''
+    const nomeCategoriaB = b.categoriaId ? (categoriasPorId.get(b.categoriaId)?.nome ?? '') : ''
+    if (nomeCategoriaA !== nomeCategoriaB) {
+      if (!nomeCategoriaA) return 1
+      if (!nomeCategoriaB) return -1
+      return nomeCategoriaA.localeCompare(nomeCategoriaB, 'pt-BR')
+    }
+    return a.nome.localeCompare(b.nome, 'pt-BR')
+  })
+  const opcoesItens = itensOrdenadosPorCategoria.map((item) => {
+    const categoria = item.categoriaId ? categoriasPorId.get(item.categoriaId) : undefined
+    return {
+      value: item.id,
+      label: item.nome,
+      group: categoria?.nome ?? SEM_CATEGORIA,
+      icon: categoria ? <CategoriaIcon icone={categoria.icone} className="size-4" /> : undefined,
+    }
+  })
+
   const termoCliente = filtroCliente.trim().toLowerCase()
   const blocosClientes = agruparClientesPorGrupo(clientesPresentes, grupos ?? []).filter(
     (bloco) =>
@@ -162,7 +189,7 @@ export function LancarConsumoSheet({
                 id="consumo-item-catalogo"
                 value={itemId}
                 onValueChange={handleSelecionarItem}
-                options={itens.map((item) => ({ value: item.id, label: item.nome }))}
+                options={opcoesItens}
                 placeholder="Selecione um item"
                 searchPlaceholder="Filtrar item..."
                 emptyText="Nenhum item encontrado."

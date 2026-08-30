@@ -13,6 +13,7 @@ export function ComandasPage() {
     clientes,
     grupos,
     itensConsumo,
+    categoriasConsumo,
     saldoDoCliente,
     extratoDoCliente,
     lancarConsumo,
@@ -60,6 +61,7 @@ export function ComandasPage() {
         {presentes.length > 0 && (
           <LancarConsumoSheet
             itens={itensConsumo}
+            categorias={categoriasConsumo}
             clientes={presentes}
             grupos={grupos}
             onLancar={lancarConsumo}

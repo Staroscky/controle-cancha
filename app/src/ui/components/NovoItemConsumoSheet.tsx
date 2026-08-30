@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
+import type { CategoriaConsumo } from '@/domain/types/CategoriaConsumo'
+import { CategoriaIcon } from '@/ui/components/CategoriaIcon'
 import { Button } from '@/ui/components/ui/button'
+import { Combobox } from '@/ui/components/ui/combobox'
 import { Input } from '@/ui/components/ui/input'
 import { Label } from '@/ui/components/ui/label'
 import {
@@ -14,18 +17,21 @@ import {
 } from '@/ui/components/ui/sheet'
 
 type NovoItemConsumoSheetProps = {
-  onCadastrar: (nome: string, valor: number) => void
+  categorias: CategoriaConsumo[]
+  onCadastrar: (nome: string, valor: number, categoriaId: string | null) => void
 }
 
-export function NovoItemConsumoSheet({ onCadastrar }: NovoItemConsumoSheetProps) {
+export function NovoItemConsumoSheet({ categorias, onCadastrar }: NovoItemConsumoSheetProps) {
   const [aberto, setAberto] = useState(false)
   const [nome, setNome] = useState('')
   const [valor, setValor] = useState('')
+  const [categoriaId, setCategoriaId] = useState('')
 
   function abrir(aberto: boolean) {
     if (aberto) {
       setNome('')
       setValor('')
+      setCategoriaId('')
     }
     setAberto(aberto)
   }
@@ -43,7 +49,7 @@ export function NovoItemConsumoSheet({ onCadastrar }: NovoItemConsumoSheetProps)
       return
     }
 
-    onCadastrar(nome.trim(), valorNumerico)
+    onCadastrar(nome.trim(), valorNumerico, categoriaId || null)
     toast.success('Item cadastrado no catálogo.')
     setAberto(false)
   }
@@ -74,6 +80,22 @@ export function NovoItemConsumoSheet({ onCadastrar }: NovoItemConsumoSheetProps)
               step="0.01"
               value={valor}
               onChange={(e) => setValor(e.target.value)}
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="novo-item-categoria">Categoria</Label>
+            <Combobox
+              id="novo-item-categoria"
+              value={categoriaId}
+              onValueChange={setCategoriaId}
+              options={categorias.map((categoria) => ({
+                value: categoria.id,
+                label: categoria.nome,
+                icon: <CategoriaIcon icone={categoria.icone} className="size-4" />,
+              }))}
+              placeholder="Sem categoria"
+              searchPlaceholder="Filtrar categoria..."
+              emptyText="Nenhuma categoria cadastrada."
             />
           </div>
         </div>

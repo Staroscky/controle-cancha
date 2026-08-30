@@ -10,14 +10,18 @@ import type { ItemConsumo } from '@/domain/types/ItemConsumo'
 export function useConsumo() {
   const [itens, setItens] = useState<ItemConsumo[]>(() => listarItensConsumoOrdenados())
 
-  const cadastrarItem = useCallback((nome: string, valor: number) => {
-    const item = adicionarItemConsumo(nome, valor)
+  const recarregarItens = useCallback(() => {
+    setItens(listarItensConsumoOrdenados())
+  }, [])
+
+  const cadastrarItem = useCallback((nome: string, valor: number, categoriaId: string | null) => {
+    const item = adicionarItemConsumo(nome, valor, categoriaId)
     setItens(listarItensConsumoOrdenados())
     return item
   }, [])
 
-  const editarItem = useCallback((id: string, nome: string, valor: number) => {
-    editarItemConsumo(id, nome, valor)
+  const editarItem = useCallback((id: string, nome: string, valor: number, categoriaId: string | null) => {
+    editarItemConsumo(id, nome, valor, categoriaId)
     setItens(listarItensConsumoOrdenados())
   }, [])
 
@@ -31,5 +35,6 @@ export function useConsumo() {
     cadastrarItem,
     editarItem,
     removerItem,
+    recarregarItens,
   }
 }

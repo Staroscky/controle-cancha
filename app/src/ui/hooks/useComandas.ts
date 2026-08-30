@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react'
+import { listarCategoriasConsumoOrdenadas } from '@/data/categoriasConsumoRepo'
 import { definirPresencaCliente, listarClientes } from '@/data/clientesRepo'
 import { listarGrupos } from '@/data/gruposRepo'
 import { listarItensConsumoOrdenados } from '@/data/itensConsumoRepo'
@@ -13,6 +14,7 @@ import {
   type ItemPagamentoGrupo,
 } from '@/domain/rules/prepararLancamentosPagamentoGrupo'
 import { prepararLancamentosUsoCreditoGrupo } from '@/domain/rules/prepararLancamentosUsoCreditoGrupo'
+import type { CategoriaConsumo } from '@/domain/types/CategoriaConsumo'
 import type { Cliente } from '@/domain/types/Cliente'
 import type { Grupo } from '@/domain/types/Grupo'
 import type { ItemConsumo } from '@/domain/types/ItemConsumo'
@@ -23,6 +25,7 @@ export function useComandas() {
   const [grupos, setGrupos] = useState<Grupo[]>(() => listarGrupos())
   const [lancamentos, setLancamentos] = useState<LancamentoFinanceiro[]>(() => listarLancamentos())
   const [itensConsumo] = useState<ItemConsumo[]>(() => listarItensConsumoOrdenados())
+  const [categoriasConsumo] = useState<CategoriaConsumo[]>(() => listarCategoriasConsumoOrdenadas())
 
   const recarregar = useCallback(() => {
     setClientes(listarClientes())
@@ -114,6 +117,7 @@ export function useComandas() {
     grupos,
     lancamentos,
     itensConsumo,
+    categoriasConsumo,
     saldoDoCliente,
     extratoDoCliente,
     registrarPagamento,
