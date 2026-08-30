@@ -204,7 +204,7 @@ export function ComandaDrawer({
 
   useEffect(() => {
     if (!blocoAtual) return
-    setValor(String(ehAbaGeral ? totalDevido : Math.abs(membroAtivo?.saldo ?? 0)))
+    setValor((ehAbaGeral ? totalDevido : Math.abs(membroAtivo?.saldo ?? 0)).toFixed(2))
     setDescricao('')
     setCreditosUsados({})
     // recalcula o valor sugerido sempre que a comanda é (re)aberta (aberturaVersao), a aba muda,

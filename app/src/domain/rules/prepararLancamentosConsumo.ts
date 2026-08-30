@@ -1,5 +1,6 @@
 import type { LancamentoFinanceiro } from '../types/LancamentoFinanceiro'
 import { TIPO_LANCAMENTO_IDS } from '../types/TipoLancamento'
+import { arredondarMoedaParaCima } from './arredondarMoeda'
 
 type LancamentoAGerar = Omit<LancamentoFinanceiro, 'id' | 'criadoEm'>
 
@@ -17,7 +18,7 @@ export function prepararLancamentosConsumo(
 
   const quantidade = clienteIds.length
   const descricao = quantidade === 1 ? descricaoItem : `1/${quantidade} ${descricaoItem}`
-  const valor = -(valorTotal / quantidade)
+  const valor = -arredondarMoedaParaCima(valorTotal / quantidade)
   // Item dividido não deixa óbvio o valor total pago — a observação registra isso automaticamente.
   const observacao = quantidade > 1 ? `Valor original: ${formatoMoeda.format(valorTotal)}` : null
 
