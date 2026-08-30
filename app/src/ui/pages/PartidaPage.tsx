@@ -72,6 +72,7 @@ export function PartidaPage() {
 
       <HistoricoPartidas
         historico={historico}
+        todasPartidas={todasPartidas}
         clientes={clientes}
         partidaAtivaExiste={!!partida}
         onCriarComParticipantes={criarComParticipantes}

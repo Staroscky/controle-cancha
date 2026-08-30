@@ -14,6 +14,7 @@ import {
   limparHistoricoPartidas,
   listarPartidas,
 } from '@/data/partidasRepo'
+import { calcularNumeroPartidaDoDia } from '@/domain/rules/calcularNumeroPartidaDoDia'
 import { prepararLancamentosFechamentoPartida } from '@/domain/rules/prepararLancamentosFechamentoPartida'
 import type { Lado, Participacao } from '@/domain/types/Participacao'
 import type { Partida } from '@/domain/types/Partida'
@@ -120,11 +121,13 @@ export function usePartidaAtiva() {
   const concluir = useCallback(
     (equipeVencedoraId: string) => {
       if (!partida) return
+      const numeroPartidaDoDia = calcularNumeroPartidaDoDia(listarPartidas(), partida.id)
       const lancamentos = prepararLancamentosFechamentoPartida(
         participacoes,
         partida.id,
         equipeVencedoraId,
         partida.valorPartidaPorCliente,
+        numeroPartidaDoDia,
       )
       lancamentos.forEach((lancamento) => adicionarLancamento(lancamento))
       concluirPartida(partida.id, equipeVencedoraId)

@@ -2,6 +2,7 @@ import { ChevronDown, ChevronUp } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { listarParticipacoesPorPartida } from '@/data/participacoesRepo'
+import { calcularNumeroPartidaDoDia } from '@/domain/rules/calcularNumeroPartidaDoDia'
 import type { Cliente } from '@/domain/types/Cliente'
 import { EQUIPES } from '@/domain/types/Equipe'
 import type { Partida } from '@/domain/types/Partida'
@@ -29,6 +30,7 @@ type ResultadoCriarComParticipantes = {
 
 type HistoricoPartidasProps = {
   historico: Partida[]
+  todasPartidas: Partida[]
   clientes: Cliente[]
   partidaAtivaExiste: boolean
   onCriarComParticipantes: (partidaId: string) => ResultadoCriarComParticipantes
@@ -37,6 +39,7 @@ type HistoricoPartidasProps = {
 
 export function HistoricoPartidas({
   historico,
+  todasPartidas,
   clientes,
   partidaAtivaExiste,
   onCriarComParticipantes,
@@ -102,6 +105,7 @@ export function HistoricoPartidas({
           const participantes = listarParticipacoesPorPartida(partida.id).filter(
             (p) => p.status === 'ativo',
           )
+          const numeroDoDia = calcularNumeroPartidaDoDia(todasPartidas, partida.id)
           const expandida = expandidaId === partida.id
 
           return (
@@ -119,8 +123,8 @@ export function HistoricoPartidas({
                   )}
                   <span>
                     <span className="font-medium">
-                      {equipeVencedora?.nome === 'Azul' ? '🔵' : '🟡'} {equipeVencedora?.nome}{' '}
-                      venceu
+                      Partida #{numeroDoDia} · {equipeVencedora?.nome === 'Azul' ? '🔵' : '🟡'}{' '}
+                      {equipeVencedora?.nome} venceu
                     </span>
                     <span className="text-muted-foreground">
                       {' '}

@@ -11,12 +11,16 @@ export function prepararLancamentosFechamentoPartida(
   partidaId: string,
   equipeVencedoraId: string,
   valorPartidaPorCliente: number,
+  numeroPartidaDoDia: number,
 ): LancamentoAGerar[] {
   if (valorPartidaPorCliente <= 0) return []
 
   const ativas = participacoes.filter((p) => p.status === 'ativo')
   const vencedores = ativas.filter((p) => p.equipeId === equipeVencedoraId)
   const perdedores = ativas.filter((p) => p.equipeId !== equipeVencedoraId)
+
+  // Identifica a partida de origem no extrato sem precisar de texto livre do operador.
+  const observacao = `Partida #${numeroPartidaDoDia}`
 
   const debitos: LancamentoAGerar[] = perdedores.map((p) => ({
     clienteId: p.clienteId,
@@ -25,6 +29,7 @@ export function prepararLancamentosFechamentoPartida(
     itemId: null,
     valor: -valorPartidaPorCliente,
     descricao: 'Cobrança de derrota',
+    observacao,
   }))
 
   const creditoPorVencedor = calcularCreditoVitoria(
@@ -42,6 +47,7 @@ export function prepararLancamentosFechamentoPartida(
           itemId: null,
           valor: creditoPorVencedor,
           descricao: 'Crédito de vitória',
+          observacao,
         }))
       : []
 

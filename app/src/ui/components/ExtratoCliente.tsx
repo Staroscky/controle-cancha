@@ -143,6 +143,9 @@ function ItemLancamento({
         </span>
         <div>
           <p className="text-base font-medium">{lancamento.descricao}</p>
+          {lancamento.observacao && (
+            <p className="text-sm text-muted-foreground">{lancamento.observacao}</p>
+          )}
           <p className="text-sm text-muted-foreground">{formatoHora.format(new Date(lancamento.criadoEm))}</p>
         </div>
       </div>

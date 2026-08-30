@@ -29,7 +29,7 @@ describe('prepararLancamentosFechamentoPartida', () => {
   it('partida 4x4 com valor R$ 6 gera 4 débitos de -6 e 4 créditos de +6 (seção 7)', () => {
     const participacoes = [...criarTime(AZUL, 4), ...criarTime(AMARELA, 4)]
 
-    const lancamentos = prepararLancamentosFechamentoPartida(participacoes, PARTIDA_ID, AZUL, 6)
+    const lancamentos = prepararLancamentosFechamentoPartida(participacoes, PARTIDA_ID, AZUL, 6, 1)
 
     const debitos = lancamentos.filter((l) => l.tipoId === TIPO_LANCAMENTO_IDS.debitoPartida)
     const creditos = lancamentos.filter((l) => l.tipoId === TIPO_LANCAMENTO_IDS.creditoPartida)
@@ -43,7 +43,7 @@ describe('prepararLancamentosFechamentoPartida', () => {
   it('partida 8x4 (8 vencedores x 4 perdedores) gera 4 débitos de -6 e 8 créditos de +3 (seção 9)', () => {
     const participacoes = [...criarTime(AZUL, 8), ...criarTime(AMARELA, 4)]
 
-    const lancamentos = prepararLancamentosFechamentoPartida(participacoes, PARTIDA_ID, AZUL, 6)
+    const lancamentos = prepararLancamentosFechamentoPartida(participacoes, PARTIDA_ID, AZUL, 6, 1)
 
     const debitos = lancamentos.filter((l) => l.tipoId === TIPO_LANCAMENTO_IDS.debitoPartida)
     const creditos = lancamentos.filter((l) => l.tipoId === TIPO_LANCAMENTO_IDS.creditoPartida)
@@ -57,7 +57,7 @@ describe('prepararLancamentosFechamentoPartida', () => {
   it('valorPartidaPorCliente = 0 não gera nenhum lançamento (seção 12)', () => {
     const participacoes = [...criarTime(AZUL, 4), ...criarTime(AMARELA, 4)]
 
-    const lancamentos = prepararLancamentosFechamentoPartida(participacoes, PARTIDA_ID, AZUL, 0)
+    const lancamentos = prepararLancamentosFechamentoPartida(participacoes, PARTIDA_ID, AZUL, 0, 1)
 
     expect(lancamentos).toEqual([])
   })
@@ -69,7 +69,7 @@ describe('prepararLancamentosFechamentoPartida', () => {
       ...criarTime(AMARELA, 4),
     ]
 
-    const lancamentos = prepararLancamentosFechamentoPartida(participacoes, PARTIDA_ID, AZUL, 6)
+    const lancamentos = prepararLancamentosFechamentoPartida(participacoes, PARTIDA_ID, AZUL, 6, 1)
 
     const creditos = lancamentos.filter((l) => l.tipoId === TIPO_LANCAMENTO_IDS.creditoPartida)
     expect(creditos).toHaveLength(3)
@@ -82,7 +82,7 @@ describe('prepararLancamentosFechamentoPartida', () => {
       criarParticipacao({ equipeId: AMARELA, status: 'saiu' }),
     ]
 
-    const lancamentos = prepararLancamentosFechamentoPartida(participacoes, PARTIDA_ID, AZUL, 6)
+    const lancamentos = prepararLancamentosFechamentoPartida(participacoes, PARTIDA_ID, AZUL, 6, 1)
 
     const debitos = lancamentos.filter((l) => l.tipoId === TIPO_LANCAMENTO_IDS.debitoPartida)
     const creditos = lancamentos.filter((l) => l.tipoId === TIPO_LANCAMENTO_IDS.creditoPartida)
@@ -93,7 +93,7 @@ describe('prepararLancamentosFechamentoPartida', () => {
   it('time perdedor vazio: sem débitos e sem créditos (nada a distribuir)', () => {
     const participacoes = criarTime(AZUL, 4)
 
-    const lancamentos = prepararLancamentosFechamentoPartida(participacoes, PARTIDA_ID, AZUL, 6)
+    const lancamentos = prepararLancamentosFechamentoPartida(participacoes, PARTIDA_ID, AZUL, 6, 1)
 
     expect(lancamentos).toEqual([])
   })
@@ -101,11 +101,19 @@ describe('prepararLancamentosFechamentoPartida', () => {
   it('time vencedor vazio: perdedores ainda geram débito, mas nenhum crédito é distribuído', () => {
     const participacoes = criarTime(AMARELA, 4)
 
-    const lancamentos = prepararLancamentosFechamentoPartida(participacoes, PARTIDA_ID, AZUL, 6)
+    const lancamentos = prepararLancamentosFechamentoPartida(participacoes, PARTIDA_ID, AZUL, 6, 1)
 
     expect(lancamentos).toHaveLength(4)
     expect(lancamentos.every((l) => l.tipoId === TIPO_LANCAMENTO_IDS.debitoPartida && l.valor === -6)).toBe(
       true,
     )
+  })
+
+  it('débito e crédito recebem observação automática com o número da partida do dia', () => {
+    const participacoes = [...criarTime(AZUL, 4), ...criarTime(AMARELA, 4)]
+
+    const lancamentos = prepararLancamentosFechamentoPartida(participacoes, PARTIDA_ID, AZUL, 6, 3)
+
+    expect(lancamentos.every((l) => l.observacao === 'Partida #3')).toBe(true)
   })
 })

@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { prepararLancamentosConsumo } from '@/domain/rules/prepararLancamentosConsumo'
 import { TIPO_LANCAMENTO_IDS } from '@/domain/types/TipoLancamento'
 
+const formatoMoeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
+
 const CLIENTE_1 = 'cliente-1'
 const CLIENTE_2 = 'cliente-2'
 const CLIENTE_3 = 'cliente-3'
@@ -66,5 +68,25 @@ describe('prepararLancamentosConsumo', () => {
     const doCliente2 = lancamentos.find((l) => l.clienteId === CLIENTE_2)
     expect(doCliente1?.partidaId).toBe('partida-1')
     expect(doCliente2?.partidaId).toBeNull()
+  })
+
+  it('item dividido entre vários clientes gera observação automática com o valor original', () => {
+    const lancamentos = prepararLancamentosConsumo(
+      [CLIENTE_1, CLIENTE_2],
+      'Cerveja',
+      12,
+      ITEM_ID,
+      semPartida,
+    )
+
+    expect(lancamentos.every((l) => l.observacao === `Valor original: ${formatoMoeda.format(12)}`)).toBe(
+      true,
+    )
+  })
+
+  it('item para 1 único cliente não gera observação', () => {
+    const lancamentos = prepararLancamentosConsumo([CLIENTE_1], 'Cerveja', 10, ITEM_ID, semPartida)
+
+    expect(lancamentos[0].observacao).toBeNull()
   })
 })

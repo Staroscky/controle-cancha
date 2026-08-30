@@ -6,5 +6,6 @@ export type LancamentoFinanceiro = {
   itemId: string | null
   valor: number
   descricao: string
+  observacao?: string | null
   criadoEm: string
 }
