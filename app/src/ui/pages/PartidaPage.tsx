@@ -7,6 +7,7 @@ import { ConfiguracaoPadraoSheet } from '@/ui/components/ConfiguracaoPadraoSheet
 import { CriarPartidaSheet } from '@/ui/components/CriarPartidaSheet'
 import { HistoricoPartidas } from '@/ui/components/HistoricoPartidas'
 import { MontagemEquipes } from '@/ui/components/MontagemEquipes'
+import { PlacarDoDia } from '@/ui/components/PlacarDoDia'
 import { useConfiguracaoPadrao } from '@/ui/hooks/useConfiguracaoPadrao'
 import { usePartidaAtiva } from '@/ui/hooks/usePartidaAtiva'
 
@@ -40,6 +41,8 @@ export function PartidaPage() {
           {!partida && <CriarPartidaSheet configuracaoPadrao={configuracao} onCriar={criar} />}
         </div>
       </div>
+
+      <PlacarDoDia todasPartidas={todasPartidas} />
 
       {!partida && (
         <p className="text-sm text-muted-foreground">
