@@ -121,6 +121,8 @@ export function ComandasPage() {
         onFechar={() => setChaveAberta(null)}
         saldoDoCliente={saldoDoCliente}
         extratoDoCliente={extratoDoCliente}
+        itensConsumo={itensConsumo}
+        categoriasConsumo={categoriasConsumo}
         onRegistrarPagamento={registrarPagamento}
         onRegistrarPagamentoGrupo={registrarPagamentoGrupo}
         onMarcarSaida={marcarSaida}

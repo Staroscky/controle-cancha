@@ -41,13 +41,23 @@ export function ConsumoPage() {
   const [nomeEdicao, setNomeEdicao] = useState('')
   const [valorEdicao, setValorEdicao] = useState('')
   const [categoriaEdicaoId, setCategoriaEdicaoId] = useState('')
+  const SEM_CATEGORIA = '_sem_categoria_'
+
   const [filtro, setFiltro] = useState('')
-  const itensFiltrados = itens.filter((item) =>
-    item.nome.toLowerCase().includes(filtro.trim().toLowerCase()),
-  )
+  const [filtroCategoriaId, setFiltroCategoriaId] = useState('')
+  const itensFiltrados = itens.filter((item) => {
+    if (!item.nome.toLowerCase().includes(filtro.trim().toLowerCase())) return false
+    if (!filtroCategoriaId) return true
+    if (filtroCategoriaId === SEM_CATEGORIA) return !item.categoriaId
+    return item.categoriaId === filtroCategoriaId
+  })
 
   const [categoriaEditandoId, setCategoriaEditandoId] = useState<string | null>(null)
   const [nomeCategoriaEdicao, setNomeCategoriaEdicao] = useState('')
+  const [filtroCategoria, setFiltroCategoria] = useState('')
+  const categoriasFiltradas = categorias.filter((categoria) =>
+    categoria.nome.toLowerCase().includes(filtroCategoria.trim().toLowerCase()),
+  )
 
   function iniciarEdicao(id: string, nomeAtual: string, valorAtual: number, categoriaIdAtual: string | null) {
     setEditandoId(id)
@@ -111,114 +121,7 @@ export function ConsumoPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Categorias</h2>
-          <NovaCategoriaConsumoSheet onCadastrar={cadastrarCategoria} />
-        </div>
-
-        {categorias.length === 0 && (
-          <p className="text-sm text-muted-foreground">
-            Nenhuma categoria cadastrada ainda. Crie categorias como bebidas, petiscos e lanches
-            para organizar o catálogo.
-          </p>
-        )}
-
-        {categorias.length > 0 && (
-          <div className="rounded-md border">
-            <Table>
-              <TableBody>
-                {categorias.map((categoria) => (
-                  <TableRow key={categoria.id}>
-                    <TableCell className="w-0">
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button type="button" variant="ghost" size="icon-sm" title="Alterar ícone">
-                            <CategoriaIcon icone={categoria.icone} className="size-4" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent align="start" className="w-auto p-2">
-                          <IconeCategoriaPicker
-                            value={categoria.icone}
-                            onValueChange={(icone) =>
-                              handleAlterarIconeCategoria(categoria.id, categoria.nome, icone)
-                            }
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </TableCell>
-                    <TableCell>
-                      {categoriaEditandoId === categoria.id ? (
-                        <Input
-                          autoFocus
-                          value={nomeCategoriaEdicao}
-                          onChange={(e) => setNomeCategoriaEdicao(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') confirmarEdicaoCategoria()
-                            if (e.key === 'Escape') setCategoriaEditandoId(null)
-                          }}
-                          className="h-8"
-                        />
-                      ) : (
-                        <span className="truncate">{categoria.nome}</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center justify-end gap-1">
-                        {categoriaEditandoId === categoria.id ? (
-                          <Button type="button" size="sm" onClick={confirmarEdicaoCategoria}>
-                            Salvar
-                          </Button>
-                        ) : (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon-sm"
-                            title="Renomear categoria"
-                            onClick={() => iniciarEdicaoCategoria(categoria.id, categoria.nome)}
-                          >
-                            <Pencil className="size-4" />
-                          </Button>
-                        )}
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon-sm"
-                              className="text-destructive hover:text-destructive"
-                              title="Remover categoria"
-                            >
-                              <Trash2 className="size-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Remover categoria?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Os itens de "{categoria.nome}" continuam no catálogo, mas ficam sem
-                                categoria.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleRemoverCategoria(categoria.id)}>
-                                Remover
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
-      </div>
-
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">Catálogo de itens</h2>
@@ -233,6 +136,22 @@ export function ConsumoPage() {
               onChange={(e) => setFiltro(e.target.value)}
               className="h-8 max-w-48"
             />
+            <Combobox
+              value={filtroCategoriaId}
+              onValueChange={setFiltroCategoriaId}
+              options={[
+                { value: SEM_CATEGORIA, label: 'Sem categoria' },
+                ...categorias.map((c) => ({
+                  value: c.id,
+                  label: c.nome,
+                  icon: <CategoriaIcon icone={c.icone} className="size-4" />,
+                })),
+              ]}
+              placeholder="Todas as categorias"
+              searchPlaceholder="Filtrar categoria..."
+              emptyText="Nenhuma categoria cadastrada."
+              className="h-8 max-w-48"
+            />
           </div>
 
           {itens.length === 0 && (
@@ -240,7 +159,7 @@ export function ConsumoPage() {
           )}
 
           {itens.length > 0 && itensFiltrados.length === 0 && (
-            <p className="text-sm text-muted-foreground">Nenhum item encontrado para "{filtro}".</p>
+            <p className="text-sm text-muted-foreground">Nenhum item encontrado para o filtro aplicado.</p>
           )}
 
           {itensFiltrados.length > 0 && (
@@ -371,6 +290,137 @@ export function ConsumoPage() {
                       </TableRow>
                     )
                   })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold">Categorias</h2>
+          <NovaCategoriaConsumoSheet onCadastrar={cadastrarCategoria} />
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <Input
+              placeholder="Filtrar por nome..."
+              value={filtroCategoria}
+              onChange={(e) => setFiltroCategoria(e.target.value)}
+              className="h-8 max-w-48"
+            />
+          </div>
+
+          {categorias.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              Nenhuma categoria cadastrada ainda. Crie categorias como bebidas, petiscos e lanches
+              para organizar o catálogo.
+            </p>
+          )}
+
+          {categorias.length > 0 && categoriasFiltradas.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              Nenhuma categoria encontrada para "{filtroCategoria}".
+            </p>
+          )}
+
+          {categoriasFiltradas.length > 0 && (
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-0" />
+                    <TableHead>Nome</TableHead>
+                    <TableHead className="w-0" />
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {categoriasFiltradas.map((categoria) => (
+                    <TableRow key={categoria.id}>
+                      <TableCell className="w-0">
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button type="button" variant="ghost" size="icon-sm" title="Alterar ícone">
+                              <CategoriaIcon icone={categoria.icone} className="size-4" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent align="start" className="w-auto p-2">
+                            <IconeCategoriaPicker
+                              value={categoria.icone}
+                              onValueChange={(icone) =>
+                                handleAlterarIconeCategoria(categoria.id, categoria.nome, icone)
+                              }
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </TableCell>
+                      <TableCell>
+                        {categoriaEditandoId === categoria.id ? (
+                          <Input
+                            autoFocus
+                            value={nomeCategoriaEdicao}
+                            onChange={(e) => setNomeCategoriaEdicao(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') confirmarEdicaoCategoria()
+                              if (e.key === 'Escape') setCategoriaEditandoId(null)
+                            }}
+                            className="h-8"
+                          />
+                        ) : (
+                          <span className="truncate">{categoria.nome}</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center justify-end gap-1">
+                          {categoriaEditandoId === categoria.id ? (
+                            <Button type="button" size="sm" onClick={confirmarEdicaoCategoria}>
+                              Salvar
+                            </Button>
+                          ) : (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon-sm"
+                              title="Renomear categoria"
+                              onClick={() => iniciarEdicaoCategoria(categoria.id, categoria.nome)}
+                            >
+                              <Pencil className="size-4" />
+                            </Button>
+                          )}
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon-sm"
+                                className="text-destructive hover:text-destructive"
+                                title="Remover categoria"
+                              >
+                                <Trash2 className="size-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Remover categoria?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Os itens de "{categoria.nome}" continuam no catálogo, mas ficam sem
+                                  categoria.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleRemoverCategoria(categoria.id)}>
+                                  Remover
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
                 </TableBody>
               </Table>
             </div>

@@ -6,9 +6,12 @@ import {
   type GrupoLancamentosPorDia,
 } from '@/domain/rules/agruparLancamentosPorDia'
 import { calcularSaldo } from '@/domain/rules/calcularSaldo'
+import type { CategoriaConsumo } from '@/domain/types/CategoriaConsumo'
 import type { Cliente } from '@/domain/types/Cliente'
+import type { ItemConsumo } from '@/domain/types/ItemConsumo'
 import type { LancamentoFinanceiro } from '@/domain/types/LancamentoFinanceiro'
 import { TIPO_LANCAMENTO_IDS } from '@/domain/types/TipoLancamento'
+import { CategoriaIcon } from '@/ui/components/CategoriaIcon'
 import { Button } from '@/ui/components/ui/button'
 import { cn } from '@/ui/lib/utils'
 
@@ -16,7 +19,19 @@ const formatoMoeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currenc
 const formatoDia = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'long' })
 const formatoHora = new Intl.DateTimeFormat('pt-BR', { timeStyle: 'short' })
 
-function IconeDoLancamento({ tipoId, className }: { tipoId: string; className?: string }) {
+function IconeDoLancamento({
+  tipoId,
+  iconeCategoria,
+  className,
+}: {
+  tipoId: string
+  iconeCategoria?: string
+  className?: string
+}) {
+  if (iconeCategoria) {
+    return <CategoriaIcon icone={iconeCategoria} className={className} />
+  }
+
   switch (tipoId) {
     case TIPO_LANCAMENTO_IDS.creditoPartida:
     case TIPO_LANCAMENTO_IDS.debitoPartida:
@@ -99,7 +114,18 @@ function EstadoVazioConsumo({ nome }: { nome: string }) {
   )
 }
 
-function ItemLancamento({ lancamento }: { lancamento: LancamentoFinanceiro }) {
+function ItemLancamento({
+  lancamento,
+  itensPorId,
+  categoriasPorId,
+}: {
+  lancamento: LancamentoFinanceiro
+  itensPorId: Map<string, ItemConsumo>
+  categoriasPorId: Map<string, CategoriaConsumo>
+}) {
+  const item = lancamento.itemId ? itensPorId.get(lancamento.itemId) : undefined
+  const categoria = item?.categoriaId ? categoriasPorId.get(item.categoriaId) : undefined
+
   return (
     <li className="flex items-center justify-between gap-3 rounded-2xl bg-muted px-4 py-3">
       <div className="flex items-center gap-3">
@@ -109,7 +135,11 @@ function ItemLancamento({ lancamento }: { lancamento: LancamentoFinanceiro }) {
             corDoIcone(lancamento.valor),
           )}
         >
-          <IconeDoLancamento tipoId={lancamento.tipoId} className="size-5" />
+          <IconeDoLancamento
+            tipoId={lancamento.tipoId}
+            iconeCategoria={categoria?.icone}
+            className="size-5"
+          />
         </span>
         <div>
           <p className="text-base font-medium">{lancamento.descricao}</p>
@@ -126,9 +156,16 @@ function ItemLancamento({ lancamento }: { lancamento: LancamentoFinanceiro }) {
 type ExtratoClienteProps = {
   cliente: Cliente
   lancamentos: LancamentoFinanceiro[]
+  itensConsumo: ItemConsumo[]
+  categoriasConsumo: CategoriaConsumo[]
 }
 
-export function ExtratoCliente({ cliente, lancamentos }: ExtratoClienteProps) {
+export function ExtratoCliente({ cliente, lancamentos, itensConsumo, categoriasConsumo }: ExtratoClienteProps) {
+  const itensPorId = useMemo(() => new Map(itensConsumo.map((item) => [item.id, item])), [itensConsumo])
+  const categoriasPorId = useMemo(
+    () => new Map(categoriasConsumo.map((categoria) => [categoria.id, categoria])),
+    [categoriasConsumo],
+  )
   const saldoAtual = calcularSaldo(lancamentos, cliente.id)
   // Ao abrir a comanda, o dia selecionado deve ser sempre hoje — mesmo sem lançamento algum
   // ainda hoje (histórico anterior existente ou cliente que nunca consumiu). Por isso, quando o
@@ -164,7 +201,12 @@ export function ExtratoCliente({ cliente, lancamentos }: ExtratoClienteProps) {
           ) : (
             <ul className="space-y-2">
               {grupoAtual.lancamentos.map((lancamento) => (
-                <ItemLancamento key={lancamento.id} lancamento={lancamento} />
+                <ItemLancamento
+                  key={lancamento.id}
+                  lancamento={lancamento}
+                  itensPorId={itensPorId}
+                  categoriasPorId={categoriasPorId}
+                />
               ))}
             </ul>
           )}

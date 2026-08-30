@@ -45,7 +45,7 @@ export function NovaCategoriaConsumoSheet({ onCadastrar }: NovaCategoriaConsumoS
   return (
     <Sheet open={aberto} onOpenChange={abrir}>
       <SheetTrigger asChild>
-        <Button variant="outline">Nova categoria</Button>
+        <Button>Nova categoria</Button>
       </SheetTrigger>
       <SheetContent>
         <SheetHeader>

@@ -4,6 +4,8 @@ import { toast } from 'sonner'
 import type { Bloco } from '@/domain/rules/agruparClientesPorGrupo'
 import { alocarPagamentoGrupo } from '@/domain/rules/alocarPagamentoGrupo'
 import type { ItemPagamentoGrupo } from '@/domain/rules/prepararLancamentosPagamentoGrupo'
+import type { CategoriaConsumo } from '@/domain/types/CategoriaConsumo'
+import type { ItemConsumo } from '@/domain/types/ItemConsumo'
 import type { LancamentoFinanceiro } from '@/domain/types/LancamentoFinanceiro'
 import { ExtratoCliente } from '@/ui/components/ExtratoCliente'
 import { FormularioFechamento } from '@/ui/components/FormularioFechamento'
@@ -33,6 +35,8 @@ type ComandaDrawerProps = {
   onFechar: () => void
   saldoDoCliente: (clienteId: string) => number
   extratoDoCliente: (clienteId: string) => LancamentoFinanceiro[]
+  itensConsumo: ItemConsumo[]
+  categoriasConsumo: CategoriaConsumo[]
   onRegistrarPagamento: (clienteId: string, valor: number, descricao: string) => boolean
   onRegistrarPagamentoGrupo: (
     itens: ItemPagamentoGrupo[],
@@ -122,6 +126,8 @@ export function ComandaDrawer({
   onFechar,
   saldoDoCliente,
   extratoDoCliente,
+  itensConsumo,
+  categoriasConsumo,
   onRegistrarPagamento,
   onRegistrarPagamentoGrupo,
   onMarcarSaida,
@@ -343,7 +349,13 @@ export function ComandaDrawer({
                 value={cliente.id}
                 className="flex min-h-0 flex-1 flex-col overflow-y-auto pt-3 pb-1"
               >
-                <ExtratoCliente key={aberturaVersao} cliente={cliente} lancamentos={extratoDoCliente(cliente.id)} />
+                <ExtratoCliente
+                  key={aberturaVersao}
+                  cliente={cliente}
+                  lancamentos={extratoDoCliente(cliente.id)}
+                  itensConsumo={itensConsumo}
+                  categoriasConsumo={categoriasConsumo}
+                />
               </TabsContent>
             ))}
           </Tabs>
@@ -353,6 +365,8 @@ export function ComandaDrawer({
               key={aberturaVersao}
               cliente={blocoAtual.membros[0]}
               lancamentos={extratoDoCliente(blocoAtual.membros[0].id)}
+              itensConsumo={itensConsumo}
+              categoriasConsumo={categoriasConsumo}
             />
           </div>
         )}
