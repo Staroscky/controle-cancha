@@ -1,4 +1,4 @@
-export type StatusPartida = 'em_andamento' | 'concluida'
+export type StatusPartida = 'em_andamento' | 'concluida' | 'desistencia'
 
 export type Partida = {
   id: string

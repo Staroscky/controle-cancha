@@ -36,7 +36,14 @@ export function concluirPartida(id: string, equipeVencedoraId: string): void {
   setItem(CHAVE, partidas)
 }
 
+export function desistirPartida(id: string): void {
+  const partidas = listarPartidas().map((p) =>
+    p.id === id ? { ...p, status: 'desistencia' as const } : p,
+  )
+  setItem(CHAVE, partidas)
+}
+
 export function limparHistoricoPartidas(): void {
-  const restantes = listarPartidas().filter((p) => p.status !== 'concluida')
+  const restantes = listarPartidas().filter((p) => p.status === 'em_andamento')
   setItem(CHAVE, restantes)
 }

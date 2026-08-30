@@ -19,7 +19,6 @@ import {
 } from '@/ui/components/ui/alert-dialog'
 import { Badge } from '@/ui/components/ui/badge'
 import { Button } from '@/ui/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/ui/components/ui/card'
 import {
   Sheet,
   SheetContent,
@@ -227,18 +226,16 @@ export function MontagemEquipes({
         {EQUIPES.map((equipe) => {
           const daEquipe = participacoesAtivas.filter((p) => p.equipeId === equipe.id)
           return (
-            <Card key={equipe.id} size="sm">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span>
-                    {equipe.nome === 'Azul' ? '🔵' : '🟡'} {equipe.nome}
-                  </span>
-                  <span className="text-xs font-normal text-muted-foreground">
-                    {daEquipe.length}/8
-                  </span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
+            <div key={equipe.id} className="rounded-lg border bg-muted/20 p-3">
+              <div className="mb-3 flex items-center justify-between text-sm font-medium">
+                <span>
+                  {equipe.nome === 'Azul' ? '🔵' : '🟡'} {equipe.nome}
+                </span>
+                <span className="text-xs font-normal text-muted-foreground">
+                  {daEquipe.length}/8
+                </span>
+              </div>
+              <div className="space-y-3">
                 {LADOS.map((opcao) => {
                   const noLado = daEquipe.filter((p) => p.lado === opcao.valor)
                   if (noLado.length === 0) return null
@@ -289,8 +286,8 @@ export function MontagemEquipes({
                 {daEquipe.length === 0 && (
                   <p className="text-xs text-muted-foreground">Nenhum participante ainda.</p>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           )
         })}
       </div>

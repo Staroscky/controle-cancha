@@ -147,6 +147,19 @@ Ao terminar a partida, os clientes informam:
 
 Não existe empate.
 
+### Desistência
+
+Às vezes a partida não chega a um resultado — os jogadores abandonam antes de terminar. Nesse
+caso, em vez de escolher uma equipe vencedora, o dono pode encerrar a partida como
+**desistência**:
+
+- A partida fica com `status = desistencia` e `equipe_vencedora_id = null` (nunca aparece no
+  Placar do Dia, que só conta partidas concluídas normalmente — seção 14.1).
+- **Nenhum lançamento financeiro é gerado** — não há `Débito partida` nem `Crédito partida` para
+  ninguém, independente de quem estava ativo em cada equipe no momento.
+- A partida continua aparecendo no histórico (seção 14.1), identificada como "Desistência" em vez
+  de mostrar uma equipe vencedora.
+
 ---
 
 # 6. Regra financeira
@@ -677,6 +690,9 @@ A interface é dividida em 4 abas. Essa divisão é uma sugestão de UX — não
   - `Débito partida` (cobrança de derrota) para cada perdedor ativo.
   - `Crédito partida` (crédito de vitória) dividido entre os vencedores ativos.
   - (seção 7 e 8)
+- Se os jogadores abandonarem a partida sem chegar a um resultado, o dono pode encerrá-la como
+  **desistência** em vez de escolher uma equipe vencedora — nenhum lançamento financeiro é gerado
+  (seção 5, "Desistência").
 - Exibe, para cada cliente ativo na partida, o indicativo calculado de consumação mínima **acumulada entre todas as partidas em que ele participou** (seção 7, "faltam R$ X para o mínimo"), sem afetar o saldo.
 - Mostra um histórico das partidas já concluídas (data, equipe vencedora, quantidade de participantes ativos, valor por cliente); cada item expande e mostra os participantes ativos agrupados por equipe. A partir de uma partida do histórico, é possível criar uma nova partida reaproveitando os mesmos clientes, repetindo a equipe e o lado exatos de cada um — usando os valores da configuração padrão atual (não os valores da partida antiga). Cliente que não está mais presente no estabelecimento é ignorado nessa cópia (seção 3.1).
 - É possível limpar o histórico (apagar os registros de partidas concluídas da lista). Isso não desfaz nenhum lançamento financeiro já gerado por essas partidas — créditos e débitos continuam valendo no saldo do cliente normalmente.

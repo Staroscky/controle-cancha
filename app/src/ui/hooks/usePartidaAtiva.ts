@@ -11,6 +11,7 @@ import {
 import {
   concluirPartida,
   criarPartida,
+  desistirPartida,
   limparHistoricoPartidas,
   listarPartidas,
 } from '@/data/partidasRepo'
@@ -29,7 +30,7 @@ function obterPartidaEmAndamento(): Partida | null {
 
 function obterHistorico(): Partida[] {
   return listarPartidas()
-    .filter((p) => p.status === 'concluida')
+    .filter((p) => p.status === 'concluida' || p.status === 'desistencia')
     .sort((a, b) => b.dataHora.localeCompare(a.dataHora))
 }
 
@@ -157,6 +158,12 @@ export function usePartidaAtiva() {
     [partida, participacoes, recarregar],
   )
 
+  const desistir = useCallback(() => {
+    if (!partida) return
+    desistirPartida(partida.id)
+    recarregar(null)
+  }, [partida, recarregar])
+
   return {
     partida,
     participacoes,
@@ -168,6 +175,7 @@ export function usePartidaAtiva() {
     inverterEquipes,
     registrarSaida,
     concluir,
+    desistir,
     lancarConsumo,
   }
 }

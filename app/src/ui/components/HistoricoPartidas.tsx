@@ -116,7 +116,7 @@ export function HistoricoPartidas({
             <AlertDialogHeader>
               <AlertDialogTitle>Limpar histórico de partidas?</AlertDialogTitle>
               <AlertDialogDescription>
-                As {historico.length} partida(s) concluída(s) somem dessa lista. Os créditos e
+                As {historico.length} partida(s) do histórico somem dessa lista. Os créditos e
                 débitos já lançados continuam valendo no saldo dos clientes — essa ação só limpa
                 o histórico, não desfaz cobrança nenhuma.
               </AlertDialogDescription>
@@ -181,8 +181,15 @@ export function HistoricoPartidas({
                             )}
                             <span>
                               <span className="font-medium">
-                                #{numeroDoDia} · {equipeVencedora?.nome === 'Azul' ? '🔵' : '🟡'}{' '}
-                                {equipeVencedora?.nome} venceu
+                                #{numeroDoDia} ·{' '}
+                                {partida.status === 'desistencia' ? (
+                                  'Desistência'
+                                ) : (
+                                  <>
+                                    {equipeVencedora?.nome === 'Azul' ? '🔵' : '🟡'}{' '}
+                                    {equipeVencedora?.nome} venceu
+                                  </>
+                                )}
                               </span>
                               <span className="text-muted-foreground">
                                 {' '}
