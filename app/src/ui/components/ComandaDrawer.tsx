@@ -30,6 +30,8 @@ import {
 } from '@/ui/components/ui/sheet'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui/components/ui/tabs'
 
+const formatoMoeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
+
 type ComandaDrawerProps = {
   bloco: Bloco | null
   onFechar: () => void
@@ -151,6 +153,9 @@ export function ComandaDrawer({
   const [descricao, setDescricao] = useState('')
   const [creditosUsados, setCreditosUsados] = useState<Record<string, string>>({})
   const [pedidoSaida, setPedidoSaida] = useState<PedidoPendente | null>(null)
+  // true quando o valor digitado no fechamento do grupo não cobre o total devido e o dono
+  // ainda não confirmou que quer seguir mesmo assim (ver handleConfirmarGrupo).
+  const [confirmarPagamentoParcial, setConfirmarPagamentoParcial] = useState(false)
   // Incrementado a cada pagamento registrado, pra forçar o recálculo do valor sugerido
   // (saldo devedor após o pagamento) sem fechar o drawer — ver handleConfirmar* abaixo.
   const [pagamentoVersao, setPagamentoVersao] = useState(0)
@@ -251,6 +256,19 @@ export function ComandaDrawer({
       toast.error('Informe um valor válido (maior que zero).')
       return
     }
+    // Valor + crédito cedido não cobre o total devido pelo grupo: como o fechamento pela aba
+    // "Geral" já sugere marcar TODOS os membros como saída (ver abaixo), confirma antes que o
+    // dono realmente quer seguir com dívida em aberto, em vez de registrar direto.
+    if (Number(valor) + totalCreditoUsado < totalDevido - 0.005) {
+      setConfirmarPagamentoParcial(true)
+      return
+    }
+    registrarPagamentoGrupo()
+  }
+
+  function registrarPagamentoGrupo() {
+    if (!blocoAtual) return
+    setConfirmarPagamentoParcial(false)
     const usosCredito: ItemPagamentoGrupo[] = Object.entries(creditosUsados)
       .map(([clienteId, v]) => ({ clienteId, valor: Number(v) || 0 }))
       .filter((item) => item.valor > 0)
@@ -259,24 +277,14 @@ export function ComandaDrawer({
       toast.error('Informe um valor válido (maior que zero).')
       return
     }
-    const devedoresQuitados = devedores
-      .filter((m) => (itensAlocados.find((item) => item.clienteId === m.cliente.id)?.valor ?? 0) >= Math.abs(m.saldo))
-      .map((m) => m.cliente.id)
-    const credoresZerados = usosCredito
-      .filter((item) => item.valor >= (membrosComSaldo.find((m) => m.cliente.id === item.clienteId)?.saldo ?? 0))
-      .map((item) => item.clienteId)
-    const quitados = [...devedoresQuitados, ...credoresZerados]
     setPagamentoVersao((v) => v + 1)
     toast.success(`Pagamento do grupo${blocoAtual.nome ? ` ${blocoAtual.nome}` : ''} registrado.`)
-    if (quitados.length > 0) {
-      const nomes = quitados
-        .map((id) => membrosComSaldo.find((m) => m.cliente.id === id)?.cliente.nome)
-        .filter(Boolean)
-        .join(', ')
-      // devedoresQuitados e credoresZerados só entram nessa lista quando o pagamento/crédito
-      // cedido cobriu exatamente o saldo devido/disponível — o saldo resultante é sempre zero.
-      setPedidoSaida({ clienteIds: quitados, nomes })
-    }
+    // Pagamento pela aba "Geral" fecha a comanda do grupo como um todo, então sugere marcar
+    // a saída de TODOS os membros — mesmo que algum tenha ficado com saldo residual (pagamento
+    // parcial) — e não só de quem zerou o saldo individualmente.
+    const clienteIds = membrosComSaldo.map((m) => m.cliente.id)
+    const nomes = membrosComSaldo.map((m) => m.cliente.nome).join(', ')
+    setPedidoSaida({ clienteIds, nomes })
   }
 
   function handleConfirmarIndividual() {
@@ -398,6 +406,27 @@ export function ComandaDrawer({
               )}
         </SheetFooter>
       </SheetContent>
+
+      <AlertDialog
+        open={confirmarPagamentoParcial}
+        onOpenChange={(aberto) => !aberto && setConfirmarPagamentoParcial(false)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Valor não cobre o total do grupo</AlertDialogTitle>
+            <AlertDialogDescription>
+              O valor informado cobre {formatoMoeda.format(Number(valor) + totalCreditoUsado)} de{' '}
+              {formatoMoeda.format(totalDevido)} devidos pelo grupo, ficando{' '}
+              {formatoMoeda.format(totalDevido - Number(valor) - totalCreditoUsado)} em aberto. Deseja
+              registrar mesmo assim?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={registrarPagamentoGrupo}>Registrar mesmo assim</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={!!pedidoSaida} onOpenChange={(aberto) => !aberto && setPedidoSaida(null)}>
         <AlertDialogContent>
