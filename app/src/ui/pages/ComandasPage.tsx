@@ -12,6 +12,7 @@ export function ComandasPage() {
   const {
     clientes,
     grupos,
+    lancamentos,
     itensConsumo,
     categoriasConsumo,
     saldoDoCliente,
@@ -21,6 +22,9 @@ export function ComandasPage() {
     registrarPagamentoGrupo,
     marcarSaida,
     marcarSaidaGrupo,
+    corrigirConsumo,
+    corrigirPagamentoOuCredito,
+    removerLancamento,
   } = useComandas()
 
   // Guarda só a "chave" da comanda aberta (grupoId, ou o id do cliente quando é solo/ausente),
@@ -121,12 +125,18 @@ export function ComandasPage() {
         onFechar={() => setChaveAberta(null)}
         saldoDoCliente={saldoDoCliente}
         extratoDoCliente={extratoDoCliente}
+        lancamentos={lancamentos}
+        clientes={clientes}
+        grupos={grupos}
         itensConsumo={itensConsumo}
         categoriasConsumo={categoriasConsumo}
         onRegistrarPagamento={registrarPagamento}
         onRegistrarPagamentoGrupo={registrarPagamentoGrupo}
         onMarcarSaida={marcarSaida}
         onMarcarSaidaGrupo={marcarSaidaGrupo}
+        onCorrigirConsumo={corrigirConsumo}
+        onCorrigirPagamentoOuCredito={corrigirPagamentoOuCredito}
+        onRemoverLancamento={removerLancamento}
       />
     </div>
   )

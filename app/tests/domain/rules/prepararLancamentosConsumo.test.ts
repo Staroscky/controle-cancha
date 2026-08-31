@@ -89,4 +89,29 @@ describe('prepararLancamentosConsumo', () => {
 
     expect(lancamentos[0].observacao).toBeNull()
   })
+
+  it('item dividido propaga o loteId recebido igualmente para todos os lançamentos', () => {
+    const lancamentos = prepararLancamentosConsumo(
+      [CLIENTE_1, CLIENTE_2, CLIENTE_3],
+      'Cerveja',
+      30,
+      ITEM_ID,
+      semPartida,
+      'lote-1',
+    )
+
+    expect(lancamentos.every((l) => l.loteId === 'lote-1')).toBe(true)
+  })
+
+  it('1 único cliente ignora o loteId recebido (fica null, sem sentido pra rateio)', () => {
+    const lancamentos = prepararLancamentosConsumo([CLIENTE_1], 'Cerveja', 10, ITEM_ID, semPartida, 'lote-1')
+
+    expect(lancamentos[0].loteId).toBeNull()
+  })
+
+  it('loteId não informado (parâmetro omitido) resulta em null', () => {
+    const lancamentos = prepararLancamentosConsumo([CLIENTE_1, CLIENTE_2], 'Cerveja', 20, ITEM_ID, semPartida)
+
+    expect(lancamentos.every((l) => l.loteId === null)).toBe(true)
+  })
 })

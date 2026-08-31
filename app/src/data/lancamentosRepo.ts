@@ -15,6 +15,10 @@ export function listarLancamentosPorPartida(partidaId: string): LancamentoFinanc
   return listarLancamentos().filter((l) => l.partidaId === partidaId)
 }
 
+export function listarLancamentosPorLote(loteId: string): LancamentoFinanceiro[] {
+  return listarLancamentos().filter((l) => l.loteId === loteId)
+}
+
 export function adicionarLancamento(
   lancamento: Omit<LancamentoFinanceiro, 'id' | 'criadoEm'>,
 ): LancamentoFinanceiro {

@@ -13,6 +13,7 @@ export function prepararLancamentosConsumo(
   valorTotal: number,
   itemId: string | null,
   obterPartidaIdDoCliente: (clienteId: string) => string | null,
+  loteId: string | null = null,
 ): LancamentoAGerar[] {
   if (clienteIds.length === 0 || valorTotal <= 0) return []
 
@@ -30,5 +31,6 @@ export function prepararLancamentosConsumo(
     valor,
     descricao,
     observacao,
+    loteId: quantidade > 1 ? loteId : null,
   }))
 }

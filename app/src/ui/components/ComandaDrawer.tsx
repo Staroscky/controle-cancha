@@ -3,12 +3,18 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import type { Bloco } from '@/domain/rules/agruparClientesPorGrupo'
 import { alocarPagamentoGrupo } from '@/domain/rules/alocarPagamentoGrupo'
+import { descricaoSemPrefixoDeRateio } from '@/domain/rules/descricaoSemPrefixoDeRateio'
 import type { ItemPagamentoGrupo } from '@/domain/rules/prepararLancamentosPagamentoGrupo'
 import type { CategoriaConsumo } from '@/domain/types/CategoriaConsumo'
+import type { Cliente } from '@/domain/types/Cliente'
+import type { Grupo } from '@/domain/types/Grupo'
 import type { ItemConsumo } from '@/domain/types/ItemConsumo'
 import type { LancamentoFinanceiro } from '@/domain/types/LancamentoFinanceiro'
+import { TIPO_LANCAMENTO_IDS } from '@/domain/types/TipoLancamento'
+import { CorrigirPagamentoSheet } from '@/ui/components/CorrigirPagamentoSheet'
 import { ExtratoCliente } from '@/ui/components/ExtratoCliente'
 import { FormularioFechamento } from '@/ui/components/FormularioFechamento'
+import { LancarConsumoSheet } from '@/ui/components/LancarConsumoSheet'
 import { RevisaoPagamentoGrupo, type MembroComSaldo } from '@/ui/components/RevisaoPagamentoGrupo'
 import {
   AlertDialog,
@@ -37,6 +43,9 @@ type ComandaDrawerProps = {
   onFechar: () => void
   saldoDoCliente: (clienteId: string) => number
   extratoDoCliente: (clienteId: string) => LancamentoFinanceiro[]
+  lancamentos: LancamentoFinanceiro[]
+  clientes: Cliente[]
+  grupos: Grupo[]
   itensConsumo: ItemConsumo[]
   categoriasConsumo: CategoriaConsumo[]
   onRegistrarPagamento: (clienteId: string, valor: number, descricao: string) => boolean
@@ -47,7 +56,22 @@ type ComandaDrawerProps = {
   ) => boolean
   onMarcarSaida: (clienteId: string) => void
   onMarcarSaidaGrupo: (clienteIds: string[]) => void
+  onCorrigirConsumo: (
+    originais: LancamentoFinanceiro[],
+    descricaoItem: string,
+    valorTotal: number,
+    itemId: string | null,
+    clienteIds: string[],
+  ) => boolean
+  onCorrigirPagamentoOuCredito: (
+    original: LancamentoFinanceiro,
+    clienteId: string,
+    valor: number,
+    descricao: string,
+  ) => boolean
+  onRemoverLancamento: (originais: LancamentoFinanceiro[]) => boolean
 }
+
 
 // Pedido de confirmação de saída pendente, aberto depois que uma comanda é fechada.
 type PedidoPendente = {
@@ -128,12 +152,18 @@ export function ComandaDrawer({
   onFechar,
   saldoDoCliente,
   extratoDoCliente,
+  lancamentos,
+  clientes,
+  grupos,
   itensConsumo,
   categoriasConsumo,
   onRegistrarPagamento,
   onRegistrarPagamentoGrupo,
   onMarcarSaida,
   onMarcarSaidaGrupo,
+  onCorrigirConsumo,
+  onCorrigirPagamentoOuCredito,
+  onRemoverLancamento,
 }: ComandaDrawerProps) {
   // Mantém o conteúdo montado durante a animação de fechar (Sheet fica com open=false,
   // mas o último bloco selecionado continua renderizado até o Sheet ser desmontado).
@@ -159,6 +189,8 @@ export function ComandaDrawer({
   // Incrementado a cada pagamento registrado, pra forçar o recálculo do valor sugerido
   // (saldo devedor após o pagamento) sem fechar o drawer — ver handleConfirmar* abaixo.
   const [pagamentoVersao, setPagamentoVersao] = useState(0)
+  // Lançamento sendo corrigido (seção 11.3 de docs/regras.md) — o tipoId decide qual Sheet abre.
+  const [lancamentoEmCorrecao, setLancamentoEmCorrecao] = useState<LancamentoFinanceiro | null>(null)
 
   // Identifica a comanda (grupo ou cliente solo) independente do conteúdo dela — o pai agora
   // recria o Bloco a cada render (pra refletir membros que saíram do grupo etc.), então não dá
@@ -215,6 +247,30 @@ export function ComandaDrawer({
   }, [aberturaVersao, aba, pagamentoVersao])
 
   if (!blocoAtual) return null
+
+  // Lançamento de Consumo em correção: reúne todos os "irmãos" do mesmo lote (item dividido),
+  // ou só ele mesmo, pra reabrir o formulário já preenchido com a divisão inteira.
+  const consumoEmCorrecao =
+    lancamentoEmCorrecao?.tipoId === TIPO_LANCAMENTO_IDS.consumo ? lancamentoEmCorrecao : null
+  const originaisDoConsumoEmCorrecao = consumoEmCorrecao
+    ? consumoEmCorrecao.loteId
+      ? lancamentos.filter((l) => l.loteId === consumoEmCorrecao.loteId)
+      : [consumoEmCorrecao]
+    : []
+  const valoresIniciaisConsumo = consumoEmCorrecao
+    ? {
+        descricao: descricaoSemPrefixoDeRateio(consumoEmCorrecao.descricao),
+        valor: originaisDoConsumoEmCorrecao.reduce((soma, l) => soma + Math.abs(l.valor), 0),
+        itemId: consumoEmCorrecao.itemId,
+        clienteIds: originaisDoConsumoEmCorrecao.map((l) => l.clienteId),
+      }
+    : undefined
+  const pagamentoOuCreditoEmCorrecao =
+    lancamentoEmCorrecao &&
+    (lancamentoEmCorrecao.tipoId === TIPO_LANCAMENTO_IDS.pagamento ||
+      lancamentoEmCorrecao.tipoId === TIPO_LANCAMENTO_IDS.usoCredito)
+      ? lancamentoEmCorrecao
+      : null
 
   const totalCreditoUsado = Object.values(creditosUsados).reduce((soma, v) => soma + (Number(v) || 0), 0)
 
@@ -322,7 +378,7 @@ export function ComandaDrawer({
 
   return (
     <Sheet open={!!bloco} onOpenChange={(aberto) => !aberto && onFechar()}>
-      <SheetContent className="flex w-full flex-col sm:max-w-lg">
+      <SheetContent className="flex w-full flex-col sm:max-w-xl">
         <SheetHeader>
           <SheetTitle>{titulo}</SheetTitle>
           {blocoAtual.grupoId && (
@@ -361,8 +417,12 @@ export function ComandaDrawer({
                   key={aberturaVersao}
                   cliente={cliente}
                   lancamentos={extratoDoCliente(cliente.id)}
+                  todosLancamentos={lancamentos}
+                  clientes={clientes}
                   itensConsumo={itensConsumo}
                   categoriasConsumo={categoriasConsumo}
+                  onCorrigir={setLancamentoEmCorrecao}
+                  onRemover={onRemoverLancamento}
                 />
               </TabsContent>
             ))}
@@ -373,8 +433,12 @@ export function ComandaDrawer({
               key={aberturaVersao}
               cliente={blocoAtual.membros[0]}
               lancamentos={extratoDoCliente(blocoAtual.membros[0].id)}
+              todosLancamentos={lancamentos}
+              clientes={clientes}
               itensConsumo={itensConsumo}
               categoriasConsumo={categoriasConsumo}
+              onCorrigir={setLancamentoEmCorrecao}
+              onRemover={onRemoverLancamento}
             />
           </div>
         )}
@@ -442,6 +506,40 @@ export function ComandaDrawer({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <LancarConsumoSheet
+        key={consumoEmCorrecao?.id ?? 'nenhum-consumo'}
+        itens={itensConsumo}
+        categorias={categoriasConsumo}
+        clientes={clientes}
+        grupos={grupos}
+        titulo="Corrigir lançamento"
+        open={!!consumoEmCorrecao}
+        onOpenChange={(aberto) => !aberto && setLancamentoEmCorrecao(null)}
+        valoresIniciais={valoresIniciaisConsumo}
+        onLancar={(descricaoItem, valorTotal, itemId, clienteIds) => {
+          const corrigido = onCorrigirConsumo(
+            originaisDoConsumoEmCorrecao,
+            descricaoItem,
+            valorTotal,
+            itemId,
+            clienteIds,
+          )
+          if (corrigido) setLancamentoEmCorrecao(null)
+        }}
+      />
+
+      <CorrigirPagamentoSheet
+        key={pagamentoOuCreditoEmCorrecao?.id ?? 'nenhum-pagamento'}
+        lancamento={pagamentoOuCreditoEmCorrecao}
+        clientes={clientes}
+        onOpenChange={(aberto) => !aberto && setLancamentoEmCorrecao(null)}
+        onCorrigir={(clienteId, valor, descricao) =>
+          pagamentoOuCreditoEmCorrecao
+            ? onCorrigirPagamentoOuCredito(pagamentoOuCreditoEmCorrecao, clienteId, valor, descricao)
+            : false
+        }
+      />
     </Sheet>
   )
 }

@@ -24,6 +24,13 @@ type Origem = 'catalogo' | 'avulso'
 
 const SEM_CATEGORIA = 'Sem categoria'
 
+type ValoresIniciais = {
+  descricao: string
+  valor: number
+  itemId: string | null
+  clienteIds: string[]
+}
+
 type LancarConsumoSheetProps = {
   itens: ItemConsumo[]
   categorias?: CategoriaConsumo[]
@@ -34,6 +41,12 @@ type LancarConsumoSheetProps = {
   onLancar: (descricao: string, valor: number, itemId: string | null, clienteIds: string[]) => void
   titulo?: string
   mensagemSemClientes?: string
+  /** Modo controlado (ex.: correção de lançamento — seção 11.3 de docs/regras.md): quando informado,
+   * o próprio botão "Lançar consumo" não é renderizado e quem abre/fecha o Sheet é o pai. */
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+  /** Pré-preenche o formulário (ex.: dados do lançamento sendo corrigido) em vez de começar vazio. */
+  valoresIniciais?: ValoresIniciais
 }
 
 export function LancarConsumoSheet({
@@ -45,27 +58,38 @@ export function LancarConsumoSheet({
   onLancar,
   titulo,
   mensagemSemClientes,
+  open,
+  onOpenChange,
+  valoresIniciais,
 }: LancarConsumoSheetProps) {
   const clientesPresentes = clientes.filter((c) => c.presente)
+  const controlado = open !== undefined
 
-  const [aberto, setAberto] = useState(false)
-  const [origem, setOrigem] = useState<Origem>('catalogo')
-  const [itemId, setItemId] = useState('')
-  const [descricao, setDescricao] = useState('')
-  const [valor, setValor] = useState('')
-  const [clienteIds, setClienteIds] = useState<string[]>([])
+  const [abertoInterno, setAbertoInterno] = useState(false)
+  const aberto = controlado ? open : abertoInterno
+  // Estado inicial vem de valoresIniciais quando informado — cobre o modo controlado, em que o
+  // pai abre o Sheet direto com open=true e não passa pelo abrir() abaixo (que só roda em
+  // resposta a uma mudança de estado disparada pelo próprio Sheet, não pela prop `open` externa).
+  // Quem usa o modo controlado deve remontar o componente (prop `key`) a cada novo alvo, senão
+  // esse valor inicial não muda entre uma correção e outra.
+  const [origem, setOrigem] = useState<Origem>(valoresIniciais && !valoresIniciais.itemId ? 'avulso' : 'catalogo')
+  const [itemId, setItemId] = useState(valoresIniciais?.itemId ?? '')
+  const [descricao, setDescricao] = useState(valoresIniciais?.descricao ?? '')
+  const [valor, setValor] = useState(valoresIniciais ? String(valoresIniciais.valor) : '')
+  const [clienteIds, setClienteIds] = useState<string[]>(valoresIniciais?.clienteIds ?? [])
   const [filtroCliente, setFiltroCliente] = useState('')
 
-  function abrir(aberto: boolean) {
-    if (aberto) {
-      setOrigem('catalogo')
-      setItemId('')
-      setDescricao('')
-      setValor('')
-      setClienteIds([])
+  function abrir(novoAberto: boolean) {
+    if (novoAberto) {
+      setOrigem(valoresIniciais && !valoresIniciais.itemId ? 'avulso' : 'catalogo')
+      setItemId(valoresIniciais?.itemId ?? '')
+      setDescricao(valoresIniciais?.descricao ?? '')
+      setValor(valoresIniciais ? String(valoresIniciais.valor) : '')
+      setClienteIds(valoresIniciais?.clienteIds ?? [])
       setFiltroCliente('')
     }
-    setAberto(aberto)
+    if (controlado) onOpenChange?.(novoAberto)
+    else setAbertoInterno(novoAberto)
   }
 
   function handleSelecionarOrigem(novaOrigem: Origem) {
@@ -117,7 +141,7 @@ export function LancarConsumoSheet({
         ? `${descricao.trim()} lançado para 1 cliente.`
         : `${descricao.trim()} lançado para ${clienteIds.length} clientes.`,
     )
-    setAberto(false)
+    abrir(false)
   }
 
   const categoriasPorId = new Map((categorias ?? []).map((c) => [c.id, c]))
@@ -154,9 +178,11 @@ export function LancarConsumoSheet({
 
   return (
     <Sheet open={aberto} onOpenChange={abrir}>
-      <SheetTrigger asChild>
-        <Button>Lançar consumo</Button>
-      </SheetTrigger>
+      {!controlado && (
+        <SheetTrigger asChild>
+          <Button>Lançar consumo</Button>
+        </SheetTrigger>
+      )}
       <SheetContent>
         <SheetHeader>
           <SheetTitle>{titulo ?? 'Lançar consumo'}</SheetTitle>

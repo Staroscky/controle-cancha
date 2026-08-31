@@ -511,6 +511,75 @@ mesmo João ainda devendo.
 
 ---
 
+## 11.3. Correção e remoção de lançamento
+
+O dono do estabelecimento pode errar um lançamento — valor incorreto, cliente errado, item dividido entre as pessoas erradas, ou um lançamento que nem deveria existir. Em nenhum desses casos o sistema **edita ou exclui** o lançamento original (mesmo princípio da seção 14.1: o histórico de lançamentos nunca é excluído). Em vez disso, sempre gera um **estorno** do lançamento original — mesmo `cliente_id`/`tipo_id`/`partida_id`/`item_id`, `valor` invertido, `descricao` = `"Estorno: <descrição original>"`, e o campo `estorna_lancamento_id` preenchido com o `id` do original — e o dono escolhe uma de duas ações:
+
+1. **Corrigir**: além do estorno, gera um **novo lançamento** com os dados corrigidos, do mesmo jeito que um lançamento normal desse tipo (seção 10 para Consumo, seção 11.1 para Pagamento, seção 11.2 para Uso de crédito) — podendo inclusive trocar o cliente ou, no caso de um item dividido, trocar quem participa do rateio.
+2. **Remover**: só o estorno, sem lançar nada no lugar — usado quando o lançamento não deveria existir (duplicado, item que não foi consumido, pagamento que nunca aconteceu).
+
+Só é possível corrigir ou remover lançamentos de **Consumo**, **Pagamento** e **Uso de crédito** — são os únicos lançados manualmente pelo dono. `Crédito partida`/`Débito partida` ficam fora: são derivados automaticamente do resultado de uma partida (seção 7), e corrigi-los significa corrigir a partida em si, não um lançamento avulso. Um lançamento já corrigido ou removido não pode ser corrigido/removido de novo — só a versão mais atual da cadeia (a que ainda não tem estorno) aceita essas ações.
+
+### Item dividido entre vários clientes
+
+Um item dividido (seção 10) gera N lançamentos de Consumo, um por cliente, todos marcados com o mesmo `lote_id`. Corrigir ou remover **qualquer um** desses N lançamentos age sobre o rateio inteiro: todos os N lançamentos do lote são estornados juntos. Ao corrigir, a divisão é relançada por completo — podendo mudar o valor total, o item, ou a lista de clientes que participam (incluindo tirar ou adicionar alguém). Ao remover, nada é relançado para nenhum dos N clientes. Um lançamento de Consumo de um único cliente não tem `lote_id` (fica nulo) — corrigi-lo ou removê-lo afeta só ele mesmo.
+
+### Ver a divisão de um item
+
+Como cada lançamento de Consumo guarda o `lote_id` do rateio a que pertence, o extrato pode mostrar, para qualquer item dividido, exatamente entre quais clientes ele foi dividido e o valor de cada um — basta listar todos os lançamentos ainda ativos (não estornados) com o mesmo `lote_id`. É só uma consulta de exibição, sem efeito no saldo.
+
+### Exibição no extrato
+
+O lançamento original corrigido continua aparecendo no extrato do cliente (histórico nunca é ocultado), mas com texto riscado/esmaecido e um selo "Corrigido". O lançamento de estorno e o novo lançamento aparecem normalmente, na ordem cronológica em que foram feitos. Só a versão mais atual de um lançamento (a que ainda não foi corrigida) pode ser corrigida de novo.
+
+### Saldo
+
+Nenhuma regra de saldo muda: o saldo continua sendo a soma de todos os lançamentos (seção 13). Como o estorno é um lançamento normal com valor invertido, ele já neutraliza o original na soma — não é preciso nenhum tratamento especial para "descontar" um lançamento corrigido.
+
+### Exemplo — valor errado num item dividido
+
+```text
+Cerveja R$ 30 dividida entre João, Maria e Pedro (lote_id = X):
+→ 3 lançamentos de -R$ 10 cada, descricao "1/3 Cerveja"
+
+Dono percebe que o valor certo era R$ 27 e corrige a partir da linha de qualquer um dos três:
+→ 3 estornos de +R$ 10 cada (estorna_lancamento_id apontando pro lançamento original de cada um)
+→ 3 novos lançamentos de -R$ 9 cada, descricao "1/3 Cerveja", novo lote_id = Y
+
+No extrato de cada um: a linha antiga de -R$ 10 aparece riscada ("Corrigido"),
+o estorno de +R$ 10 e a nova linha de -R$ 9 aparecem normalmente.
+Saldo final de cada um: o mesmo que se -R$ 9 tivesse sido lançado direto.
+```
+
+### Exemplo — lançado para a pessoa errada
+
+```text
+Pagamento de R$ 15 lançado por engano para Maria (deveria ser João):
+→ lançamento original: cliente=Maria, tipo=Pagamento, valor=+15
+
+Dono corrige, trocando o cliente:
+→ estorno: cliente=Maria, tipo=Pagamento, valor=-15, estorna_lancamento_id=<id do original>
+→ novo lançamento: cliente=João, tipo=Pagamento, valor=+15
+
+Saldo de Maria volta ao que era antes do pagamento; saldo de João cai R$ 15 como deveria.
+```
+
+### Exemplo — remover um item dividido lançado por engano
+
+```text
+Cerveja R$ 30 dividida entre João, Maria e Pedro (lote_id = X), mas ninguém pediu:
+→ 3 lançamentos de -R$ 10 cada
+
+Dono remove a partir da linha de qualquer um dos três:
+→ 3 estornos de +R$ 10 cada, sem nenhum lançamento novo
+
+No extrato de cada um: a linha antiga de -R$ 10 aparece riscada ("Corrigido"),
+o estorno de +R$ 10 aparece normalmente, e não há linha nova.
+Saldo final de cada um: como se o item nunca tivesse sido lançado.
+```
+
+---
+
 ## 12. Modelo de dados (tabelas)
 
 Oito tabelas, ligadas por id:
@@ -561,12 +630,16 @@ participacoes
 
 lancamentos_financeiros
 ├── id
-├── cliente_id      → FK para clientes
-├── partida_id      → FK para partidas (opcional — ver regra abaixo)
-├── tipo_id         → FK para tipos_lancamento
-├── item_id         → FK para itens_consumo (opcional, só quando veio do catálogo)
-├── valor           → positivo (crédito) ou negativo (débito)
-├── descricao       → texto livre explicando o lançamento
+├── cliente_id              → FK para clientes
+├── partida_id              → FK para partidas (opcional — ver regra abaixo)
+├── tipo_id                 → FK para tipos_lancamento
+├── item_id                 → FK para itens_consumo (opcional, só quando veio do catálogo)
+├── valor                   → positivo (crédito) ou negativo (débito)
+├── descricao               → texto livre explicando o lançamento
+├── lote_id                 → opcional; correlaciona os N lançamentos de Consumo de um mesmo
+│                              item dividido entre vários clientes (seção 10). Nulo fora disso.
+├── estorna_lancamento_id   → opcional; só em lançamentos de estorno — id do lançamento que ele
+│                              reverte (seção 11.3, correção de lançamento). Nulo nos demais.
 └── criado_em
 ```
 
