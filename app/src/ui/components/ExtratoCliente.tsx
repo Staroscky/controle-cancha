@@ -1,4 +1,15 @@
-import { Banknote, ChevronLeft, ChevronRight, HandCoins, Pencil, Receipt, Trash2, Trophy, Users } from 'lucide-react'
+import {
+  Banknote,
+  ChevronLeft,
+  ChevronRight,
+  HandCoins,
+  MoreVertical,
+  Pencil,
+  Receipt,
+  Trash2,
+  Trophy,
+  Users,
+} from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import {
@@ -24,17 +35,16 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/ui/components/ui/alert-dialog'
 import { Badge } from '@/ui/components/ui/badge'
 import { Button } from '@/ui/components/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/ui/components/ui/dialog'
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/ui/components/ui/dialog'
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/ui/components/ui/dropdown-menu'
 import { cn } from '@/ui/lib/utils'
 
 // Só estes tipos são lançados manualmente pelo dono e podem ser corrigidos ou removidos (seção 11.3 de
@@ -163,7 +173,9 @@ function ItemLancamento({
   onCorrigir?: (lancamento: LancamentoFinanceiro) => void
   onRemover?: (originais: LancamentoFinanceiro[]) => boolean
 }) {
-  const [confirmarRemocao, setConfirmarRemocao] = useState(false)
+  // Ação em aberto no menu de ações desta linha — o Dialog/AlertDialog correspondente é
+  // renderizado à parte (fora do DropdownMenu), mesmo padrão de ConcluirPartidaMenu.tsx.
+  const [acao, setAcao] = useState<'divisao' | 'remover' | null>(null)
 
   const item = lancamento.itemId ? itensPorId.get(lancamento.itemId) : undefined
   const categoria = item?.categoriaId ? categoriasPorId.get(item.categoriaId) : undefined
@@ -186,9 +198,11 @@ function ItemLancamento({
     const removido = onRemover?.(originaisDoLote)
     if (removido) {
       toast.success('Lançamento removido.')
-      setConfirmarRemocao(false)
+      setAcao(null)
     }
   }
+
+  const temAcoes = !!lancamento.loteId || podeCorrigir || podeRemover
 
   return (
     <li
@@ -225,76 +239,75 @@ function ItemLancamento({
           </div>
         </div>
       </div>
-      <div className="flex items-center gap-1">
-        <span className={cn('text-base font-semibold', corDoValor(lancamento.valor))}>
+      <div className="flex shrink-0 items-center gap-1">
+        {temAcoes && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button type="button" variant="ghost" size="icon-sm" title="Ações do lançamento">
+                <MoreVertical />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {lancamento.loteId && (
+                <DropdownMenuItem onSelect={() => setAcao('divisao')}>
+                  <Users /> Ver divisão
+                </DropdownMenuItem>
+              )}
+              {podeCorrigir && (
+                <DropdownMenuItem onSelect={() => onCorrigir?.(lancamento)}>
+                  <Pencil /> Corrigir
+                </DropdownMenuItem>
+              )}
+              {podeRemover && (
+                <DropdownMenuItem variant="destructive" onSelect={() => setAcao('remover')}>
+                  <Trash2 /> Remover
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+        {/* Valor sempre por último nesta linha, pra ficar colado na borda direita do card
+            independente de haver menu de ações ou não. */}
+        <span className={cn('text-base font-semibold tabular-nums', corDoValor(lancamento.valor))}>
           {formatoMoeda.format(lancamento.valor)}
         </span>
-        {lancamento.loteId && (
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button type="button" variant="ghost" size="icon-sm" title="Ver divisão">
-                <Users />
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Dividido entre {participantesDoLote.length} clientes</DialogTitle>
-              </DialogHeader>
-              <p className="text-sm text-muted-foreground">
-                {descricaoLimpa} — {formatoMoeda.format(participantesDoLote.reduce((soma, p) => soma + Math.abs(p.valor), 0))} no total
-              </p>
-              <ul className="space-y-1">
-                {participantesDoLote.map((participante) => (
-                  <li key={participante.clienteId} className="flex items-center justify-between text-sm">
-                    <span>{participante.nome}</span>
-                    <span className={corDoValor(participante.valor)}>{formatoMoeda.format(participante.valor)}</span>
-                  </li>
-                ))}
-              </ul>
-            </DialogContent>
-          </Dialog>
-        )}
-        {podeCorrigir && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            title="Corrigir lançamento"
-            onClick={() => onCorrigir?.(lancamento)}
-          >
-            <Pencil />
-          </Button>
-        )}
-        {podeRemover && (
-          <AlertDialog open={confirmarRemocao} onOpenChange={setConfirmarRemocao}>
-            <AlertDialogTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-sm"
-                title="Remover lançamento"
-                className="text-destructive hover:text-destructive"
-              >
-                <Trash2 />
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Remover lançamento</AlertDialogTitle>
-                <AlertDialogDescription>
-                  {participantesDoLote.length > 1
-                    ? `Isso estorna "${descricaoLimpa}" para os ${participantesDoLote.length} clientes que dividiram o item, sem lançar nada no lugar.`
-                    : `Isso estorna "${descricaoLimpa}", sem lançar nada no lugar.`}
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                <AlertDialogAction onClick={handleRemover}>Remover</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        )}
       </div>
+
+      <Dialog open={acao === 'divisao'} onOpenChange={(aberto) => !aberto && setAcao(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Dividido entre {participantesDoLote.length} clientes</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            {descricaoLimpa} — {formatoMoeda.format(participantesDoLote.reduce((soma, p) => soma + Math.abs(p.valor), 0))} no total
+          </p>
+          <ul className="space-y-1">
+            {participantesDoLote.map((participante) => (
+              <li key={participante.clienteId} className="flex items-center justify-between text-sm">
+                <span>{participante.nome}</span>
+                <span className={corDoValor(participante.valor)}>{formatoMoeda.format(participante.valor)}</span>
+              </li>
+            ))}
+          </ul>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={acao === 'remover'} onOpenChange={(aberto) => !aberto && setAcao(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover lançamento</AlertDialogTitle>
+            <AlertDialogDescription>
+              {participantesDoLote.length > 1
+                ? `Isso estorna "${descricaoLimpa}" para os ${participantesDoLote.length} clientes que dividiram o item, sem lançar nada no lugar.`
+                : `Isso estorna "${descricaoLimpa}", sem lançar nada no lugar.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleRemover}>Remover</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </li>
   )
 }
