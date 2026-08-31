@@ -3,7 +3,14 @@ import { useState } from "react"
 
 import { cn } from "@/ui/lib/utils"
 import { Button } from "@/ui/components/ui/button"
-import { Input } from "@/ui/components/ui/input"
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/ui/components/ui/command"
 import {
   Popover,
   PopoverContent,
@@ -39,30 +46,39 @@ function Combobox({
   id,
 }: ComboboxProps) {
   const [aberto, setAberto] = useState(false)
-  const [busca, setBusca] = useState("")
+
+  // A Sheet (Dialog) bloqueia o scroll nativo do body via react-remove-scroll,
+  // e esse bloqueio cancela (preventDefault) qualquer wheel que não esteja
+  // dentro da árvore DOM da própria Sheet. Como o Popover é renderizado num
+  // portal separado direto no <body>, cai fora dessa área liberada e o scroll
+  // nativo da lista fica sempre cancelado. Rolamos via JS para não depender
+  // do scroll nativo do navegador. Usamos ref callback (não useEffect) porque
+  // o nó só existe no DOM quando o Popover abre, e o callback do React roda
+  // exatamente nesse momento, sem risco de rodar antes do nó existir.
+  function anexarScrollManual(lista: HTMLDivElement | null) {
+    if (!lista) return
+    function rolar(e: WheelEvent) {
+      e.preventDefault()
+      lista!.scrollTop += e.deltaY
+    }
+    lista.addEventListener("wheel", rolar, { passive: false })
+    return () => lista.removeEventListener("wheel", rolar)
+  }
 
   const selecionado = options.find((option) => option.value === value)
-  const filtrados = options.filter((option) =>
-    option.label.toLowerCase().includes(busca.trim().toLowerCase()),
-  )
   const grupos = new Map<string, ComboboxOption[]>()
-  for (const option of filtrados) {
-    const chave = option.group ?? ''
+  for (const option of options) {
+    const chave = option.group ?? ""
     grupos.set(chave, [...(grupos.get(chave) ?? []), option])
   }
 
-  function abrir(proximoAberto: boolean) {
-    setAberto(proximoAberto)
-    if (proximoAberto) setBusca("")
-  }
-
-  function escolher(novoValor: string) {
-    onValueChange(novoValor === value ? "" : novoValor)
+  function escolher(idSelecionado: string) {
+    onValueChange(idSelecionado === value ? "" : idSelecionado)
     setAberto(false)
   }
 
   return (
-    <Popover open={aberto} onOpenChange={abrir}>
+    <Popover open={aberto} onOpenChange={setAberto}>
       <PopoverTrigger asChild>
         <Button
           id={id}
@@ -83,45 +99,33 @@ function Combobox({
           <ChevronsUpDown className="size-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-(--radix-popover-trigger-width)">
-        <div className="p-2">
-          <Input
-            autoFocus
-            placeholder={searchPlaceholder}
-            value={busca}
-            onChange={(e) => setBusca(e.target.value)}
-            className="h-8"
-          />
-        </div>
-        <div className="max-h-56 overflow-y-auto border-t py-1">
-          {filtrados.length === 0 && (
-            <p className="px-3 py-2 text-xs text-muted-foreground">{emptyText}</p>
-          )}
-          {Array.from(grupos.entries()).map(([grupo, opcoesDoGrupo]) => (
-            <div key={grupo || "_sem_grupo_"}>
-              {grupo && (
-                <p className="px-3 py-1 text-xs font-medium text-muted-foreground">{grupo}</p>
-              )}
-              {opcoesDoGrupo.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => escolher(option.value)}
-                  className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-muted"
-                >
-                  <Check
-                    className={cn(
-                      "size-4 shrink-0",
-                      option.value === value ? "opacity-100" : "opacity-0",
-                    )}
-                  />
-                  {option.icon}
-                  <span className="truncate">{option.label}</span>
-                </button>
-              ))}
-            </div>
-          ))}
-        </div>
+      <PopoverContent align="start" className="w-(--radix-popover-trigger-width) p-0">
+        <Command>
+          <CommandInput placeholder={searchPlaceholder} />
+          <CommandList ref={anexarScrollManual}>
+            <CommandEmpty>{emptyText}</CommandEmpty>
+            {Array.from(grupos.entries()).map(([grupo, opcoesDoGrupo]) => (
+              <CommandGroup key={grupo || "_sem_grupo_"} heading={grupo || undefined}>
+                {opcoesDoGrupo.map((option) => (
+                  <CommandItem
+                    key={option.value}
+                    value={`${option.label} ${option.value}`}
+                    onSelect={() => escolher(option.value)}
+                  >
+                    <Check
+                      className={cn(
+                        "size-4 shrink-0",
+                        option.value === value ? "opacity-100" : "opacity-0",
+                      )}
+                    />
+                    {option.icon}
+                    <span className="truncate">{option.label}</span>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            ))}
+          </CommandList>
+        </Command>
       </PopoverContent>
     </Popover>
   )
