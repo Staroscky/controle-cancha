@@ -1,4 +1,4 @@
-import { ArrowLeftRight, XIcon } from 'lucide-react'
+import { ArrowLeftRight, UserPlus, XIcon } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { calcularIndicativoConsumacaoAcumulado } from '@/domain/rules/calcularIndicativoConsumacaoAcumulado'
@@ -7,6 +7,7 @@ import { EQUIPES } from '@/domain/types/Equipe'
 import type { LancamentoFinanceiro } from '@/domain/types/LancamentoFinanceiro'
 import type { Lado, Participacao } from '@/domain/types/Participacao'
 import type { Partida } from '@/domain/types/Partida'
+import { ConcluirPartidaMenu } from '@/ui/components/ConcluirPartidaMenu'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,11 +36,8 @@ const LADOS: Array<{ valor: Lado; rotulo: string }> = [
   { valor: 'Cima', rotulo: 'Cima' },
   { valor: 'Baixo', rotulo: 'Baixo' },
 ]
-const SELECT_CLASSNAME =
-  'h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm dark:bg-input/30'
-
 function validarNovoParticipante(
-  participacoesAtivas: Participacao[],
+  participacoesAtivas: Array<Pick<Participacao, 'equipeId' | 'lado'>>,
   equipeId: string,
   equipeNome: string,
   lado: Lado,
@@ -72,6 +70,8 @@ type MontagemEquipesProps = {
   onAdicionar: (clienteId: string, equipeId: string, lado: Lado) => void
   onRemover: (participacaoId: string) => void
   onInverterEquipes: () => void
+  onConcluir: (equipeVencedoraId: string) => void
+  onDesistir: () => void
 }
 
 export function MontagemEquipes({
@@ -83,6 +83,8 @@ export function MontagemEquipes({
   onAdicionar,
   onRemover,
   onInverterEquipes,
+  onConcluir,
+  onDesistir,
 }: MontagemEquipesProps) {
   const participacoesAtivas = participacoes.filter((p) => p.status === 'ativo')
   const clientesDisponiveis = clientes.filter(
@@ -90,30 +92,50 @@ export function MontagemEquipes({
   )
 
   const [aberto, setAberto] = useState(false)
-  const [clienteId, setClienteId] = useState('')
+  const [clienteIds, setClienteIds] = useState<string[]>([])
   const [equipeId, setEquipeId] = useState(EQUIPES[0].id)
   const [lado, setLado] = useState<Lado>(null)
   const [participacaoParaRemover, setParticipacaoParaRemover] = useState<Participacao | null>(
     null,
   )
 
+  function alternarCliente(id: string) {
+    setClienteIds((atual) =>
+      atual.includes(id) ? atual.filter((clienteId) => clienteId !== id) : [...atual, id],
+    )
+  }
+
   function handleAdicionar() {
-    if (!clienteId) {
-      toast.error('Selecione um cliente.')
+    if (clienteIds.length === 0) {
+      toast.error('Selecione ao menos um cliente.')
       return
     }
 
     const equipeNome = EQUIPES.find((e) => e.id === equipeId)?.nome ?? equipeId
-    const motivo = validarNovoParticipante(participacoesAtivas, equipeId, equipeNome, lado)
-    if (motivo) {
-      toast.error(motivo)
-      return
+    const participacoesSimuladas: Array<Pick<Participacao, 'equipeId' | 'lado'>> = [
+      ...participacoesAtivas,
+    ]
+    let adicionados = 0
+
+    for (const clienteId of clienteIds) {
+      const motivo = validarNovoParticipante(participacoesSimuladas, equipeId, equipeNome, lado)
+      if (motivo) {
+        toast.error(motivo)
+        break
+      }
+
+      onAdicionar(clienteId, equipeId, lado)
+      participacoesSimuladas.push({ equipeId, lado })
+      adicionados += 1
     }
 
-    onAdicionar(clienteId, equipeId, lado)
-    toast.success('Participante adicionado.')
-    setClienteId('')
-    setLado(null)
+    if (adicionados > 0) {
+      toast.success(
+        adicionados === 1 ? 'Participante adicionado.' : `${adicionados} participantes adicionados.`,
+      )
+      setClienteIds((atual) => atual.slice(adicionados))
+      setLado(null)
+    }
   }
 
   function handleConfirmarRemocao() {
@@ -149,7 +171,10 @@ export function MontagemEquipes({
           </Button>
           <Sheet open={aberto} onOpenChange={setAberto}>
             <SheetTrigger asChild>
-              <Button size="sm">Adicionar participante</Button>
+              <Button size="sm">
+                <UserPlus />
+                Adicionar participante
+              </Button>
             </SheetTrigger>
             <SheetContent>
               <SheetHeader>
@@ -160,24 +185,35 @@ export function MontagemEquipes({
               </SheetHeader>
               <div className="grid gap-4 px-4">
                 <div className="grid gap-2">
-                  <span className="text-sm font-medium">Cliente</span>
-                  <select
-                    className={SELECT_CLASSNAME}
-                    value={clienteId}
-                    onChange={(e) => setClienteId(e.target.value)}
-                  >
-                    <option value="">Selecione um cliente</option>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Clientes</span>
+                    {clienteIds.length > 0 && (
+                      <span className="text-xs text-muted-foreground">
+                        {clienteIds.length} selecionado{clienteIds.length > 1 ? 's' : ''}
+                      </span>
+                    )}
+                  </div>
+                  <div className="max-h-56 space-y-1 overflow-y-auto rounded-lg border p-1">
                     {clientesDisponiveis.map((cliente) => (
-                      <option key={cliente.id} value={cliente.id}>
+                      <label
+                        key={cliente.id}
+                        className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted"
+                      >
+                        <input
+                          type="checkbox"
+                          className="size-4 shrink-0 accent-primary"
+                          checked={clienteIds.includes(cliente.id)}
+                          onChange={() => alternarCliente(cliente.id)}
+                        />
                         {cliente.nome}
-                      </option>
+                      </label>
                     ))}
-                  </select>
-                  {clientesDisponiveis.length === 0 && (
-                    <p className="text-xs text-muted-foreground">
-                      Nenhum cliente presente disponível para adicionar.
-                    </p>
-                  )}
+                    {clientesDisponiveis.length === 0 && (
+                      <p className="px-2 py-1.5 text-xs text-muted-foreground">
+                        Nenhum cliente presente disponível para adicionar.
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 <div className="grid gap-2">
@@ -219,6 +255,7 @@ export function MontagemEquipes({
               </SheetFooter>
             </SheetContent>
           </Sheet>
+          <ConcluirPartidaMenu onConcluir={onConcluir} onDesistir={onDesistir} />
         </div>
       </div>
 

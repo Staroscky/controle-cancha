@@ -32,7 +32,6 @@ type LancarConsumoSheetProps = {
   /** Agrupamento alternativo (ex.: por equipe/lado da partida). Quando informado, substitui o agrupamento por grupo. */
   blocos?: Bloco[]
   onLancar: (descricao: string, valor: number, itemId: string | null, clienteIds: string[]) => void
-  clienteIdsPadrao?: string[]
   titulo?: string
   mensagemSemClientes?: string
 }
@@ -44,7 +43,6 @@ export function LancarConsumoSheet({
   grupos,
   blocos,
   onLancar,
-  clienteIdsPadrao,
   titulo,
   mensagemSemClientes,
 }: LancarConsumoSheetProps) {
@@ -64,7 +62,7 @@ export function LancarConsumoSheet({
       setItemId('')
       setDescricao('')
       setValor('')
-      setClienteIds(clienteIdsPadrao ?? [])
+      setClienteIds([])
       setFiltroCliente('')
     }
     setAberto(aberto)

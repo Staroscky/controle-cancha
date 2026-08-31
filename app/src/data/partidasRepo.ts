@@ -43,7 +43,18 @@ export function desistirPartida(id: string): void {
   setItem(CHAVE, partidas)
 }
 
+function ehHoje(dataHora: string): boolean {
+  const data = new Date(dataHora)
+  const hoje = new Date()
+  return (
+    data.getFullYear() === hoje.getFullYear() &&
+    data.getMonth() === hoje.getMonth() &&
+    data.getDate() === hoje.getDate()
+  )
+}
+
+/** Limpa apenas o histórico (partidas de dias anteriores); as de hoje permanecem como Atual. */
 export function limparHistoricoPartidas(): void {
-  const restantes = listarPartidas().filter((p) => p.status === 'em_andamento')
+  const restantes = listarPartidas().filter((p) => p.status === 'em_andamento' || ehHoje(p.dataHora))
   setItem(CHAVE, restantes)
 }

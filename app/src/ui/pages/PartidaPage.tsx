@@ -5,13 +5,12 @@ import { listarLancamentos } from '@/data/lancamentosRepo'
 import { listarParticipacoes } from '@/data/participacoesRepo'
 import { listarPartidas } from '@/data/partidasRepo'
 import { agruparParticipantesPorEquipe } from '@/domain/rules/agruparParticipantesPorEquipe'
-import { ConcluirPartidaAlertDialog } from '@/ui/components/ConcluirPartidaAlertDialog'
 import { ConfiguracaoPadraoSheet } from '@/ui/components/ConfiguracaoPadraoSheet'
 import { CriarPartidaSheet } from '@/ui/components/CriarPartidaSheet'
-import { DesistirPartidaAlertDialog } from '@/ui/components/DesistirPartidaAlertDialog'
 import { HistoricoPartidas } from '@/ui/components/HistoricoPartidas'
 import { LancarConsumoSheet } from '@/ui/components/LancarConsumoSheet'
 import { MontagemEquipes } from '@/ui/components/MontagemEquipes'
+import { PartidasDeHoje } from '@/ui/components/PartidasDeHoje'
 import { PlacarDoDia } from '@/ui/components/PlacarDoDia'
 import { Card, CardContent } from '@/ui/components/ui/card'
 import { Separator } from '@/ui/components/ui/separator'
@@ -24,6 +23,7 @@ export function PartidaPage() {
   const {
     partida,
     participacoes,
+    partidasHoje,
     historico,
     criar,
     criarComParticipantes,
@@ -52,6 +52,17 @@ export function PartidaPage() {
         <h2 className="text-lg font-semibold">Partida</h2>
         <div className="flex gap-2">
           <ConfiguracaoPadraoSheet configuracao={configuracao} onAtualizar={atualizar} />
+          {partida && participacoesAtivas.length > 0 && (
+            <LancarConsumoSheet
+              itens={itensConsumo}
+              categorias={categoriasConsumo}
+              clientes={clientes}
+              blocos={blocosPartida}
+              onLancar={lancarConsumo}
+              titulo="Lançar consumo da partida"
+              mensagemSemClientes="Nenhum participante na partida no momento."
+            />
+          )}
           {!partida && <CriarPartidaSheet configuracaoPadrao={configuracao} onCriar={criar} />}
         </div>
       </div>
@@ -67,28 +78,10 @@ export function PartidaPage() {
       {partida && (
         <Card>
           <CardContent className="space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground">
-              <span>
-                Consumação mínima: {formatoMoeda.format(partida.valorMinimoConsumacao)} · Valor da
-                partida por cliente: {formatoMoeda.format(partida.valorPartidaPorCliente)}
-              </span>
-              <div className="flex flex-wrap gap-2">
-                {participacoesAtivas.length > 0 && (
-                  <LancarConsumoSheet
-                    itens={itensConsumo}
-                    categorias={categoriasConsumo}
-                    clientes={clientes}
-                    blocos={blocosPartida}
-                    clienteIdsPadrao={participacoesAtivas.map((p) => p.clienteId)}
-                    onLancar={lancarConsumo}
-                    titulo="Lançar consumo da partida"
-                    mensagemSemClientes="Nenhum participante na partida no momento."
-                  />
-                )}
-                <DesistirPartidaAlertDialog onDesistir={desistir} />
-                <ConcluirPartidaAlertDialog onConcluir={concluir} />
-              </div>
-            </div>
+            <p className="text-sm text-muted-foreground">
+              Consumação mínima: {formatoMoeda.format(partida.valorMinimoConsumacao)} · Valor da
+              partida por cliente: {formatoMoeda.format(partida.valorPartidaPorCliente)}
+            </p>
 
             <Separator />
 
@@ -101,10 +94,20 @@ export function PartidaPage() {
               onAdicionar={adicionarParticipante}
               onRemover={registrarSaida}
               onInverterEquipes={inverterEquipes}
+              onConcluir={concluir}
+              onDesistir={desistir}
             />
           </CardContent>
         </Card>
       )}
+
+      <PartidasDeHoje
+        partidas={partidasHoje}
+        todasPartidas={todasPartidas}
+        clientes={clientes}
+        partidaAtivaExiste={!!partida}
+        onCriarComParticipantes={criarComParticipantes}
+      />
 
       <HistoricoPartidas
         historico={historico}

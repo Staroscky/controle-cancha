@@ -18,6 +18,7 @@ import {
 import { calcularNumeroPartidaDoDia } from '@/domain/rules/calcularNumeroPartidaDoDia'
 import { prepararLancamentosConsumo } from '@/domain/rules/prepararLancamentosConsumo'
 import { prepararLancamentosFechamentoPartida } from '@/domain/rules/prepararLancamentosFechamentoPartida'
+import { separarPartidasPorPeriodo } from '@/domain/rules/separarPartidasPorPeriodo'
 import type { Lado, Participacao } from '@/domain/types/Participacao'
 import type { Partida } from '@/domain/types/Partida'
 
@@ -28,7 +29,7 @@ function obterPartidaEmAndamento(): Partida | null {
   return emAndamento[0] ?? null
 }
 
-function obterHistorico(): Partida[] {
+function obterPartidasConcluidas(): Partida[] {
   return listarPartidas()
     .filter((p) => p.status === 'concluida' || p.status === 'desistencia')
     .sort((a, b) => b.dataHora.localeCompare(a.dataHora))
@@ -39,12 +40,15 @@ export function usePartidaAtiva() {
   const [participacoes, setParticipacoes] = useState<Participacao[]>(() =>
     partida ? listarParticipacoesPorPartida(partida.id) : [],
   )
-  const [historico, setHistorico] = useState<Partida[]>(() => obterHistorico())
+  const [partidasConcluidas, setPartidasConcluidas] = useState<Partida[]>(() =>
+    obterPartidasConcluidas(),
+  )
+  const { hoje: partidasHoje, anteriores: historico } = separarPartidasPorPeriodo(partidasConcluidas)
 
   const recarregar = useCallback((partidaAtual: Partida | null) => {
     setPartida(partidaAtual)
     setParticipacoes(partidaAtual ? listarParticipacoesPorPartida(partidaAtual.id) : [])
-    setHistorico(obterHistorico())
+    setPartidasConcluidas(obterPartidasConcluidas())
   }, [])
 
   const criar = useCallback(
@@ -93,7 +97,7 @@ export function usePartidaAtiva() {
 
   const limparHistorico = useCallback(() => {
     limparHistoricoPartidas()
-    setHistorico(obterHistorico())
+    setPartidasConcluidas(obterPartidasConcluidas())
   }, [])
 
   const adicionarParticipante = useCallback(
@@ -167,6 +171,7 @@ export function usePartidaAtiva() {
   return {
     partida,
     participacoes,
+    partidasHoje,
     historico,
     criar,
     criarComParticipantes,
