@@ -1,6 +1,7 @@
 import { Check, ChevronsUpDown } from "lucide-react"
 import { useState } from "react"
 
+import { normalizarTextoBusca } from "@/domain/rules/normalizarTextoBusca"
 import { cn } from "@/ui/lib/utils"
 import { Button } from "@/ui/components/ui/button"
 import {
@@ -100,7 +101,11 @@ function Combobox({
         </Button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-(--radix-popover-trigger-width) p-0">
-        <Command>
+        <Command
+          filter={(value, search) =>
+            normalizarTextoBusca(value).includes(normalizarTextoBusca(search)) ? 1 : 0
+          }
+        >
           <CommandInput placeholder={searchPlaceholder} />
           <CommandList ref={anexarScrollManual}>
             <CommandEmpty>{emptyText}</CommandEmpty>

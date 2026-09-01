@@ -8,7 +8,8 @@ import { getItem, setItem } from './storage'
 const CHAVE = 'bocha:clientes'
 
 export function listarClientes(): Cliente[] {
-  return getItem<Cliente[]>(CHAVE, [])
+  const clientes = getItem<Cliente[]>(CHAVE, [])
+  return [...clientes].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
 }
 
 export function buscarClientePorId(id: string): Cliente | undefined {

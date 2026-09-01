@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { agruparClientesPorGrupo, type Bloco } from '@/domain/rules/agruparClientesPorGrupo'
+import { normalizarTextoBusca } from '@/domain/rules/normalizarTextoBusca'
 import type { CategoriaConsumo } from '@/domain/types/CategoriaConsumo'
 import type { Cliente } from '@/domain/types/Cliente'
 import type { Grupo } from '@/domain/types/Grupo'
@@ -165,14 +166,14 @@ export function LancarConsumoSheet({
     }
   })
 
-  const termoCliente = filtroCliente.trim().toLowerCase()
+  const termoCliente = normalizarTextoBusca(filtroCliente.trim())
   const blocosBase = blocos ?? agruparClientesPorGrupo(clientesPresentes, grupos ?? [])
   const totalClientesBase = blocosBase.reduce((total, bloco) => total + bloco.membros.length, 0)
   const blocosClientes = blocosBase.filter(
     (bloco) =>
       !termoCliente ||
-      [bloco.nome, ...bloco.membros.map((m) => m.nome)].some((nome) =>
-        nome?.toLowerCase().includes(termoCliente),
+      [bloco.nome, ...bloco.membros.map((m) => m.nome)].some(
+        (nome) => nome && normalizarTextoBusca(nome).includes(termoCliente),
       ),
   )
 

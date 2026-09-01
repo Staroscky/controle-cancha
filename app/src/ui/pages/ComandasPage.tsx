@@ -1,6 +1,7 @@
 import { ChevronDown } from 'lucide-react'
 import { useState } from 'react'
 import { agruparClientesPorGrupo, type Bloco } from '@/domain/rules/agruparClientesPorGrupo'
+import { normalizarTextoBusca } from '@/domain/rules/normalizarTextoBusca'
 import { ComandaBloco } from '@/ui/components/ComandaBloco'
 import { ComandaDrawer } from '@/ui/components/ComandaDrawer'
 import { LancarConsumoSheet } from '@/ui/components/LancarConsumoSheet'
@@ -42,9 +43,9 @@ export function ComandasPage() {
   const todosOsBlocos = [...blocosPresentes, ...ausentesComSaldo.map((cliente) => ({ membros: [cliente] }))]
   const blocoAberto = chaveAberta ? (todosOsBlocos.find((b) => chaveDoBloco(b) === chaveAberta) ?? null) : null
 
-  const termo = filtro.trim().toLowerCase()
+  const termo = normalizarTextoBusca(filtro.trim())
   const correspondeAoFiltro = (nomes: (string | undefined)[]) =>
-    !termo || nomes.some((nome) => nome?.toLowerCase().includes(termo))
+    !termo || nomes.some((nome) => nome && normalizarTextoBusca(nome).includes(termo))
 
   const blocosPresentesFiltrados = blocosPresentes.filter((bloco) =>
     correspondeAoFiltro([bloco.nome, ...bloco.membros.map((m) => m.nome)]),

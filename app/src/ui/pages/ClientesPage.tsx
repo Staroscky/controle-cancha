@@ -1,6 +1,7 @@
 import { Pencil, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
+import { normalizarTextoBusca } from '@/domain/rules/normalizarTextoBusca'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -54,7 +55,7 @@ export function ClientesPage() {
   const [nomeEdicao, setNomeEdicao] = useState('')
   const [filtro, setFiltro] = useState('')
   const clientesFiltrados = clientes.filter((cliente) =>
-    cliente.nome.toLowerCase().includes(filtro.trim().toLowerCase()),
+    normalizarTextoBusca(cliente.nome).includes(normalizarTextoBusca(filtro.trim())),
   )
 
   function handleCadastrar() {
