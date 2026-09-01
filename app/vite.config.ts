@@ -15,8 +15,8 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,svg,woff2}'],
       },
       manifest: {
-        name: 'Controle de Bocha',
-        short_name: 'Bocha',
+        name: 'Sistema',
+        short_name: 'Sistema',
         description: 'Controle de partidas, consumo e acerto de contas de bocha',
         start_url: '/',
         display: 'standalone',
@@ -24,19 +24,19 @@ export default defineConfig({
         theme_color: '#1d4ed8',
         icons: [
           {
-            src: '/pwa-icon.svg',
+            src: '/logo.jpg',
             sizes: '192x192',
-            type: 'image/svg+xml',
+            type: 'image/jpeg',
           },
           {
-            src: '/pwa-icon.svg',
+            src: '/logo.jpg',
             sizes: '512x512',
-            type: 'image/svg+xml',
+            type: 'image/jpeg',
           },
           {
-            src: '/pwa-icon.svg',
+            src: '/logo.jpg',
             sizes: '512x512',
-            type: 'image/svg+xml',
+            type: 'image/jpeg',
             purpose: 'maskable',
           },
         ],

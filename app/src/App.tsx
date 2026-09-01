@@ -11,7 +11,10 @@ import { PartidaPage } from '@/ui/pages/PartidaPage'
 function App() {
   return (
     <div className="mx-auto min-h-svh max-w-7xl p-4">
-      <h1 className="mb-4 text-2xl font-bold">Controle de Bocha</h1>
+      <h1 className="mb-4 flex items-center gap-2 text-2xl font-bold">
+        <img src="/logo.jpg" alt="Logo" className="size-8 rounded-full" />
+        Sistema
+      </h1>
 
       <Tabs defaultValue="clientes">
         <TabsList className="grid w-full max-w-3xl grid-cols-6">
