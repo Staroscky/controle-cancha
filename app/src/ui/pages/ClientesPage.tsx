@@ -2,6 +2,7 @@ import { Eraser, MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { normalizarTextoBusca } from '@/domain/rules/normalizarTextoBusca'
+import type { Cliente } from '@/domain/types/Cliente'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -57,6 +58,8 @@ export function ClientesPage() {
     renomearGrupoDoBloco,
     saldoDoCliente,
     limparHistorico,
+    clientesComPendencia,
+    limparHistoricoDeTodos,
   } = useClientes()
   const [nome, setNome] = useState('')
   const [aberto, setAberto] = useState(false)
@@ -72,6 +75,10 @@ export function ClientesPage() {
   const [clienteComPendencia, setClienteComPendencia] = useState<{ nome: string; saldo: number } | null>(
     null,
   )
+  const [confirmarZerarTodos, setConfirmarZerarTodos] = useState(false)
+  const [pendentesZerarTodos, setPendentesZerarTodos] = useState<
+    { cliente: Cliente; saldo: number }[]
+  >([])
   const [filtro, setFiltro] = useState('')
   const clientesFiltrados = clientes.filter((cliente) =>
     normalizarTextoBusca(cliente.nome).includes(normalizarTextoBusca(filtro.trim())),
@@ -130,34 +137,61 @@ export function ClientesPage() {
     setClienteParaLimparHistorico(null)
   }
 
+  function abrirZerarTodos() {
+    setPendentesZerarTodos(clientesComPendencia())
+    setConfirmarZerarTodos(true)
+  }
+
+  function handleZerarTodos() {
+    const pendentes = limparHistoricoDeTodos()
+    if (pendentes.length > 0) {
+      toast.success(
+        `Histórico zerado. ${pendentes.length} cliente(s) com pendência não foram afetados.`,
+      )
+    } else {
+      toast.success('Histórico de todos os clientes foi zerado.')
+    }
+    setConfirmarZerarTodos(false)
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">Clientes</h2>
-        <Sheet open={aberto} onOpenChange={setAberto}>
-          <SheetTrigger asChild>
-            <Button>Novo cliente</Button>
-          </SheetTrigger>
-          <SheetContent>
-            <SheetHeader>
-              <SheetTitle>Cadastrar cliente</SheetTitle>
-              <SheetDescription>Informe o nome do cliente.</SheetDescription>
-            </SheetHeader>
-            <div className="grid gap-2 px-4">
-              <Label htmlFor="nome-cliente">Nome</Label>
-              <Input
-                id="nome-cliente"
-                value={nome}
-                onChange={(e) => setNome(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleCadastrar()}
-                autoFocus
-              />
-            </div>
-            <SheetFooter>
-              <Button onClick={handleCadastrar}>Cadastrar</Button>
-            </SheetFooter>
-          </SheetContent>
-        </Sheet>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={abrirZerarTodos}
+            disabled={clientes.length === 0}
+          >
+            <Eraser className="size-4" />
+            Zerar histórico de todos
+          </Button>
+          <Sheet open={aberto} onOpenChange={setAberto}>
+            <SheetTrigger asChild>
+              <Button>Novo cliente</Button>
+            </SheetTrigger>
+            <SheetContent>
+              <SheetHeader>
+                <SheetTitle>Cadastrar cliente</SheetTitle>
+                <SheetDescription>Informe o nome do cliente.</SheetDescription>
+              </SheetHeader>
+              <div className="grid gap-2 px-4">
+                <Label htmlFor="nome-cliente">Nome</Label>
+                <Input
+                  id="nome-cliente"
+                  value={nome}
+                  onChange={(e) => setNome(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleCadastrar()}
+                  autoFocus
+                />
+              </div>
+              <SheetFooter>
+                <Button onClick={handleCadastrar}>Cadastrar</Button>
+              </SheetFooter>
+            </SheetContent>
+          </Sheet>
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
@@ -327,6 +361,43 @@ export function ClientesPage() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={handleLimparHistorico}>Limpar histórico</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={confirmarZerarTodos}
+        onOpenChange={(aberto) => !aberto && setConfirmarZerarTodos(false)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Zerar histórico de todos os clientes</AlertDialogTitle>
+            <AlertDialogDescription>
+              Isso vai apagar todo o extrato financeiro (consumo, pagamentos e partidas) dos
+              clientes sem pendência. Essa ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {pendentesZerarTodos.length > 0 && (
+            <div className="rounded-md border bg-muted/50 p-3 text-sm">
+              <p className="mb-2 font-medium">
+                {pendentesZerarTodos.length} cliente(s) com pendência não terão o histórico
+                apagado:
+              </p>
+              <ul className="max-h-40 space-y-1 overflow-y-auto">
+                {pendentesZerarTodos.map(({ cliente, saldo }) => (
+                  <li key={cliente.id} className="flex items-center justify-between gap-2">
+                    <span className="truncate">{cliente.nome}</span>
+                    <span className="whitespace-nowrap text-muted-foreground">
+                      {saldo < 0 ? 'débito' : 'crédito'} de {formatoMoeda.format(Math.abs(saldo))}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleZerarTodos}>Zerar histórico</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

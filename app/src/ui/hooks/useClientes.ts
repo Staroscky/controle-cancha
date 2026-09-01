@@ -42,6 +42,24 @@ export function useClientes() {
     [lancamentos, recarregar],
   )
 
+  const clientesComPendencia = useCallback(() => {
+    return clientes
+      .map((cliente) => ({ cliente, saldo: calcularSaldo(lancamentos, cliente.id) }))
+      .filter(({ saldo }) => !podeLimparHistorico(saldo))
+  }, [clientes, lancamentos])
+
+  const limparHistoricoDeTodos = useCallback((): Cliente[] => {
+    const pendentes = clientesComPendencia()
+    const idsPendentes = new Set(pendentes.map(({ cliente }) => cliente.id))
+
+    for (const cliente of clientes) {
+      if (!idsPendentes.has(cliente.id)) removerLancamentosDoCliente(cliente.id)
+    }
+    recarregar()
+
+    return pendentes.map(({ cliente }) => cliente)
+  }, [clientes, clientesComPendencia, recarregar])
+
   const cadastrar = useCallback(
     (nome: string) => {
       const cliente = adicionarCliente(nome)
@@ -111,5 +129,7 @@ export function useClientes() {
     renomearGrupoDoBloco,
     saldoDoCliente,
     limparHistorico,
+    clientesComPendencia,
+    limparHistoricoDeTodos,
   }
 }
