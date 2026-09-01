@@ -1,4 +1,4 @@
-import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
+import { Eraser, MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { normalizarTextoBusca } from '@/domain/rules/normalizarTextoBusca'
@@ -42,6 +42,8 @@ import {
 import { QuadroPresenca } from '@/ui/components/QuadroPresenca'
 import { useClientes } from '@/ui/hooks/useClientes'
 
+const formatoMoeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
+
 export function ClientesPage() {
   const {
     clientes,
@@ -53,12 +55,21 @@ export function ClientesPage() {
     agrupar,
     desagrupar,
     renomearGrupoDoBloco,
+    saldoDoCliente,
+    limparHistorico,
   } = useClientes()
   const [nome, setNome] = useState('')
   const [aberto, setAberto] = useState(false)
   const [editandoId, setEditandoId] = useState<string | null>(null)
   const [nomeEdicao, setNomeEdicao] = useState('')
   const [clienteParaExcluir, setClienteParaExcluir] = useState<{ id: string; nome: string } | null>(
+    null,
+  )
+  const [clienteParaLimparHistorico, setClienteParaLimparHistorico] = useState<{
+    id: string
+    nome: string
+  } | null>(null)
+  const [clienteComPendencia, setClienteComPendencia] = useState<{ nome: string; saldo: number } | null>(
     null,
   )
   const [filtro, setFiltro] = useState('')
@@ -106,6 +117,17 @@ export function ClientesPage() {
     remover(clienteParaExcluir.id)
     toast.success('Cliente excluído.')
     setClienteParaExcluir(null)
+  }
+
+  function handleLimparHistorico() {
+    if (!clienteParaLimparHistorico) return
+    const limpou = limparHistorico(clienteParaLimparHistorico.id)
+    if (limpou) {
+      toast.success('Histórico limpo.')
+    } else {
+      toast.error('Não é possível limpar o histórico com crédito ou débito em aberto.')
+    }
+    setClienteParaLimparHistorico(null)
   }
 
   return (
@@ -171,7 +193,10 @@ export function ClientesPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {clientesFiltrados.map((cliente) => (
+                  {clientesFiltrados.map((cliente) => {
+                    const saldo = saldoDoCliente(cliente.id)
+                    const temSaldoEmAberto = Math.abs(saldo) >= 0.005
+                    return (
                     <TableRow key={cliente.id}>
                       <TableCell>
                         {editandoId === cliente.id ? (
@@ -218,6 +243,16 @@ export function ClientesPage() {
                                 Editar
                               </DropdownMenuItem>
                               <DropdownMenuItem
+                                onSelect={() =>
+                                  temSaldoEmAberto
+                                    ? setClienteComPendencia({ nome: cliente.nome, saldo })
+                                    : setClienteParaLimparHistorico({ id: cliente.id, nome: cliente.nome })
+                                }
+                              >
+                                <Eraser className="size-4" />
+                                Limpar histórico
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
                                 variant="destructive"
                                 onSelect={() =>
                                   setClienteParaExcluir({ id: cliente.id, nome: cliente.nome })
@@ -231,7 +266,8 @@ export function ClientesPage() {
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))}
+                    )
+                  })}
                 </TableBody>
               </Table>
             </div>
@@ -255,6 +291,45 @@ export function ClientesPage() {
           />
         </div>
       </div>
+
+      <AlertDialog
+        open={clienteComPendencia !== null}
+        onOpenChange={(aberto) => !aberto && setClienteComPendencia(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Não é possível limpar o histórico</AlertDialogTitle>
+            <AlertDialogDescription>
+              "{clienteComPendencia?.nome}" tem{' '}
+              {clienteComPendencia && clienteComPendencia.saldo < 0 ? 'um débito' : 'um crédito'} em
+              aberto de {formatoMoeda.format(Math.abs(clienteComPendencia?.saldo ?? 0))}. Acerte o
+              saldo do cliente antes de limpar o histórico.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setClienteComPendencia(null)}>Entendi</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={clienteParaLimparHistorico !== null}
+        onOpenChange={(aberto) => !aberto && setClienteParaLimparHistorico(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Limpar histórico</AlertDialogTitle>
+            <AlertDialogDescription>
+              Isso vai apagar todo o extrato financeiro de "{clienteParaLimparHistorico?.nome}"
+              (consumo, pagamentos e partidas). Essa ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleLimparHistorico}>Limpar histórico</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog
         open={clienteParaExcluir !== null}
