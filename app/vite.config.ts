@@ -6,6 +6,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: '/controle-cancha/',
   plugins: [
     react(),
     tailwindcss(),
@@ -18,23 +19,24 @@ export default defineConfig({
         name: 'Sistema',
         short_name: 'Sistema',
         description: 'Controle de partidas, consumo e acerto de contas de bocha',
-        start_url: '/',
+        start_url: '.',
+        scope: '.',
         display: 'standalone',
         background_color: '#ffffff',
         theme_color: '#1d4ed8',
         icons: [
           {
-            src: '/logo.jpg',
+            src: 'logo.jpg',
             sizes: '192x192',
             type: 'image/jpeg',
           },
           {
-            src: '/logo.jpg',
+            src: 'logo.jpg',
             sizes: '512x512',
             type: 'image/jpeg',
           },
           {
-            src: '/logo.jpg',
+            src: 'logo.jpg',
             sizes: '512x512',
             type: 'image/jpeg',
             purpose: 'maskable',
