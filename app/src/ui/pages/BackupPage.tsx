@@ -15,6 +15,7 @@ import {
 import { Button } from '@/ui/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/ui/components/ui/card'
 import { exportarBackup, importarBackup } from '@/data/backupRepo'
+import { formatarDataISOSaoPaulo } from '@/domain/rules/formatarDataISOSaoPaulo'
 
 export function BackupPage() {
   const inputArquivoRef = useRef<HTMLInputElement>(null)
@@ -25,7 +26,7 @@ export function BackupPage() {
     const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
 
-    const dataArquivo = new Date().toISOString().slice(0, 10)
+    const dataArquivo = formatarDataISOSaoPaulo()
     const link = document.createElement('a')
     link.href = url
     link.download = `bocha-backup-${dataArquivo}.json`
