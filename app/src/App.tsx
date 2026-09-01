@@ -1,10 +1,11 @@
-import { Banknote, DatabaseBackup, Receipt, Trophy, Users } from 'lucide-react'
+import { Banknote, BarChart3, DatabaseBackup, Receipt, Trophy, Users } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui/components/ui/tabs'
 import { Toaster } from '@/ui/components/ui/sonner'
 import { BackupPage } from '@/ui/pages/BackupPage'
 import { ClientesPage } from '@/ui/pages/ClientesPage'
 import { ComandasPage } from '@/ui/pages/ComandasPage'
 import { ConsumoPage } from '@/ui/pages/ConsumoPage'
+import { EstatisticasPage } from '@/ui/pages/EstatisticasPage'
 import { PartidaPage } from '@/ui/pages/PartidaPage'
 
 function App() {
@@ -13,7 +14,7 @@ function App() {
       <h1 className="mb-4 text-2xl font-bold">Controle de Bocha</h1>
 
       <Tabs defaultValue="clientes">
-        <TabsList className="grid w-full max-w-xl grid-cols-5">
+        <TabsList className="grid w-full max-w-3xl grid-cols-6">
           <TabsTrigger value="clientes">
             <Users className="size-4" />
             Clientes
@@ -29,6 +30,10 @@ function App() {
           <TabsTrigger value="comandas">
             <Banknote className="size-4" />
             Comandas
+          </TabsTrigger>
+          <TabsTrigger value="estatisticas">
+            <BarChart3 className="size-4" />
+            Estatísticas
           </TabsTrigger>
           <TabsTrigger value="backup">
             <DatabaseBackup className="size-4" />
@@ -46,6 +51,9 @@ function App() {
         </TabsContent>
         <TabsContent value="comandas">
           <ComandasPage />
+        </TabsContent>
+        <TabsContent value="estatisticas">
+          <EstatisticasPage />
         </TabsContent>
         <TabsContent value="backup">
           <BackupPage />

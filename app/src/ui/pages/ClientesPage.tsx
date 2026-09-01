@@ -1,4 +1,4 @@
-import { Pencil, Trash2 } from 'lucide-react'
+import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { normalizarTextoBusca } from '@/domain/rules/normalizarTextoBusca'
@@ -11,10 +11,15 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/ui/components/ui/alert-dialog'
 import { Badge } from '@/ui/components/ui/badge'
 import { Button } from '@/ui/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/ui/components/ui/dropdown-menu'
 import { Input } from '@/ui/components/ui/input'
 import { Label } from '@/ui/components/ui/label'
 import {
@@ -53,6 +58,9 @@ export function ClientesPage() {
   const [aberto, setAberto] = useState(false)
   const [editandoId, setEditandoId] = useState<string | null>(null)
   const [nomeEdicao, setNomeEdicao] = useState('')
+  const [clienteParaExcluir, setClienteParaExcluir] = useState<{ id: string; nome: string } | null>(
+    null,
+  )
   const [filtro, setFiltro] = useState('')
   const clientesFiltrados = clientes.filter((cliente) =>
     normalizarTextoBusca(cliente.nome).includes(normalizarTextoBusca(filtro.trim())),
@@ -93,9 +101,11 @@ export function ClientesPage() {
     }
   }
 
-  function handleRemover(id: string) {
-    remover(id)
+  function handleRemover() {
+    if (!clienteParaExcluir) return
+    remover(clienteParaExcluir.id)
     toast.success('Cliente excluído.')
+    setClienteParaExcluir(null)
   }
 
   return (
@@ -194,41 +204,30 @@ export function ClientesPage() {
                           >
                             {cliente.presente ? 'Marcar saída' : 'Marcar chegada'}
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            onClick={() => iniciarEdicao(cliente.id, cliente.nome)}
-                            title="Editar cliente"
-                          >
-                            <Pencil className="size-4" />
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon-sm"
-                                className="text-destructive hover:text-destructive"
-                                title="Excluir cliente"
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon-sm" title="Ações do cliente">
+                                <MoreHorizontal className="size-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                              <DropdownMenuItem
+                                onSelect={() => iniciarEdicao(cliente.id, cliente.nome)}
+                              >
+                                <Pencil className="size-4" />
+                                Editar
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                variant="destructive"
+                                onSelect={() =>
+                                  setClienteParaExcluir({ id: cliente.id, nome: cliente.nome })
+                                }
                               >
                                 <Trash2 className="size-4" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Excluir cliente</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Tem certeza que deseja excluir "{cliente.nome}"? Essa ação não
-                                  pode ser desfeita.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleRemover(cliente.id)}>
-                                  Excluir
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
+                                Excluir
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -256,6 +255,25 @@ export function ClientesPage() {
           />
         </div>
       </div>
+
+      <AlertDialog
+        open={clienteParaExcluir !== null}
+        onOpenChange={(aberto) => !aberto && setClienteParaExcluir(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir cliente</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir "{clienteParaExcluir?.nome}"? Essa ação não pode ser
+              desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleRemover}>Excluir</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
