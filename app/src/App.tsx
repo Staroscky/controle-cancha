@@ -12,7 +12,7 @@ function App() {
   return (
     <div className="mx-auto min-h-svh max-w-7xl p-4">
       <h1 className="mb-4 flex items-center gap-2 text-2xl font-bold">
-        <img src="/logo.jpg" alt="Logo" className="size-8 rounded-full" />
+        <img src={`${import.meta.env.BASE_URL}logo.jpg`} alt="Logo" className="size-8 rounded-full" />
         Sistema
       </h1>
 
