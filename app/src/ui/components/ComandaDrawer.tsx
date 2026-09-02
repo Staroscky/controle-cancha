@@ -11,6 +11,7 @@ import type { Grupo } from '@/domain/types/Grupo'
 import type { ItemConsumo } from '@/domain/types/ItemConsumo'
 import type { LancamentoFinanceiro } from '@/domain/types/LancamentoFinanceiro'
 import { TIPO_LANCAMENTO_IDS } from '@/domain/types/TipoLancamento'
+import { ComandaConsolidada } from '@/ui/components/ComandaConsolidada'
 import { CorrigirPagamentoSheet } from '@/ui/components/CorrigirPagamentoSheet'
 import { ExtratoCliente } from '@/ui/components/ExtratoCliente'
 import { FormularioFechamento } from '@/ui/components/FormularioFechamento'
@@ -26,6 +27,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/ui/components/ui/alert-dialog'
+import { Button } from '@/ui/components/ui/button'
 import {
   Sheet,
   SheetContent,
@@ -35,8 +37,11 @@ import {
   SheetTitle,
 } from '@/ui/components/ui/sheet'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui/components/ui/tabs'
+import { cn } from '@/ui/lib/utils'
 
 const formatoMoeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
+
+type VisaoComanda = 'extrato' | 'consolidada'
 
 type ComandaDrawerProps = {
   bloco: Bloco | null
@@ -147,6 +152,31 @@ function AbasRolaveis({ children }: { children: React.ReactNode }) {
   )
 }
 
+// Alterna entre o extrato cronológico e a comanda consolidada (seção 06), dentro da mesma aba
+// de cliente — mesmo padrão visual do TabsList "default" (fundo bg-muted, opção ativa destacada).
+function ToggleVisao({ visao, onChange }: { visao: VisaoComanda; onChange: (visao: VisaoComanda) => void }) {
+  const opcoes: { valor: VisaoComanda; rotulo: string }[] = [
+    { valor: 'extrato', rotulo: 'Extrato' },
+    { valor: 'consolidada', rotulo: 'Consolidada' },
+  ]
+  return (
+    <div className="flex w-fit gap-1 rounded-lg bg-muted p-[3px]">
+      {opcoes.map((opcao) => (
+        <Button
+          key={opcao.valor}
+          type="button"
+          size="sm"
+          variant={visao === opcao.valor ? 'secondary' : 'ghost'}
+          className={cn(visao === opcao.valor && 'shadow-sm')}
+          onClick={() => onChange(opcao.valor)}
+        >
+          {opcao.rotulo}
+        </Button>
+      ))}
+    </div>
+  )
+}
+
 export function ComandaDrawer({
   bloco,
   onFechar,
@@ -179,6 +209,7 @@ export function ComandaDrawer({
   const temAbas = !!blocoAtual?.grupoId && blocoAtual.membros.length > 1
 
   const [aba, setAba] = useState('geral')
+  const [visao, setVisao] = useState<VisaoComanda>('extrato')
   const [valor, setValor] = useState('')
   const [descricao, setDescricao] = useState('')
   const [creditosUsados, setCreditosUsados] = useState<Record<string, string>>({})
@@ -213,6 +244,7 @@ export function ComandaDrawer({
     // depois de fechada também deve resetar: o saldo pode ter mudado enquanto ela estava
     // fechada (bug antigo: campo de valor ficava travado no saldo antigo)
     setAba(bloco.grupoId && bloco.membros.length > 1 ? 'geral' : bloco.membros[0].id)
+    setVisao('extrato')
     setAberturaVersao((v) => v + 1)
   }, [bloco])
 
@@ -411,12 +443,43 @@ export function ComandaDrawer({
               <TabsContent
                 key={cliente.id}
                 value={cliente.id}
-                className="flex min-h-0 flex-1 flex-col overflow-y-auto pt-3 pb-1"
+                className="flex min-h-0 flex-1 flex-col gap-3 pt-3 pb-1"
               >
+                <ToggleVisao visao={visao} onChange={setVisao} />
+                <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+                  {visao === 'extrato' ? (
+                    <ExtratoCliente
+                      key={aberturaVersao}
+                      cliente={cliente}
+                      lancamentos={extratoDoCliente(cliente.id)}
+                      todosLancamentos={lancamentos}
+                      clientes={clientes}
+                      itensConsumo={itensConsumo}
+                      categoriasConsumo={categoriasConsumo}
+                      onCorrigir={setLancamentoEmCorrecao}
+                      onRemover={onRemoverLancamento}
+                    />
+                  ) : (
+                    <ComandaConsolidada
+                      key={aberturaVersao}
+                      cliente={cliente}
+                      lancamentos={extratoDoCliente(cliente.id)}
+                      todosLancamentos={lancamentos}
+                    />
+                  )}
+                </div>
+              </TabsContent>
+            ))}
+          </Tabs>
+        ) : (
+          <div className="flex min-h-0 flex-1 flex-col gap-3 px-4">
+            <ToggleVisao visao={visao} onChange={setVisao} />
+            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+              {visao === 'extrato' ? (
                 <ExtratoCliente
                   key={aberturaVersao}
-                  cliente={cliente}
-                  lancamentos={extratoDoCliente(cliente.id)}
+                  cliente={blocoAtual.membros[0]}
+                  lancamentos={extratoDoCliente(blocoAtual.membros[0].id)}
                   todosLancamentos={lancamentos}
                   clientes={clientes}
                   itensConsumo={itensConsumo}
@@ -424,22 +487,15 @@ export function ComandaDrawer({
                   onCorrigir={setLancamentoEmCorrecao}
                   onRemover={onRemoverLancamento}
                 />
-              </TabsContent>
-            ))}
-          </Tabs>
-        ) : (
-          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4">
-            <ExtratoCliente
-              key={aberturaVersao}
-              cliente={blocoAtual.membros[0]}
-              lancamentos={extratoDoCliente(blocoAtual.membros[0].id)}
-              todosLancamentos={lancamentos}
-              clientes={clientes}
-              itensConsumo={itensConsumo}
-              categoriasConsumo={categoriasConsumo}
-              onCorrigir={setLancamentoEmCorrecao}
-              onRemover={onRemoverLancamento}
-            />
+              ) : (
+                <ComandaConsolidada
+                  key={aberturaVersao}
+                  cliente={blocoAtual.membros[0]}
+                  lancamentos={extratoDoCliente(blocoAtual.membros[0].id)}
+                  todosLancamentos={lancamentos}
+                />
+              )}
+            </div>
           </div>
         )}
 

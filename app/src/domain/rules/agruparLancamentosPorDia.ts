@@ -49,3 +49,18 @@ export function agruparLancamentosPorDia(lancamentos: LancamentoFinanceiro[]): G
     }
   })
 }
+
+/**
+ * Como agruparLancamentosPorDia, mas garante que o último grupo seja sempre o dia de hoje — mesmo
+ * sem nenhum lançamento ainda hoje (histórico anterior existente ou cliente que nunca consumiu) —
+ * pra extrato e comanda consolidada sempre abrirem no dia atual (seção 14.1 de docs/regras.md).
+ */
+export function agruparLancamentosPorDiaComHoje(
+  lancamentos: LancamentoFinanceiro[],
+  saldoAtual: number,
+): GrupoLancamentosPorDia[] {
+  const base = agruparLancamentosPorDia(lancamentos)
+  const hojeChave = chaveDoDia(new Date().toISOString())
+  if (base[base.length - 1]?.data === hojeChave) return base
+  return [...base, { data: hojeChave, lancamentos: [], saldoAnterior: saldoAtual, saldoDoDia: saldoAtual }]
+}

@@ -1,6 +1,6 @@
 # 06 — Comanda consolidada
 
-**Status:** Planejado
+**Status:** ✅ Concluído
 
 ## Objetivo
 

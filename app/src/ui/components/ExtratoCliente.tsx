@@ -13,7 +13,7 @@ import {
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import {
-  agruparLancamentosPorDia,
+  agruparLancamentosPorDiaComHoje,
   chaveDoDia,
   type GrupoLancamentosPorDia,
 } from '@/domain/rules/agruparLancamentosPorDia'
@@ -86,7 +86,7 @@ function IconeDoLancamento({
 }
 
 // Só o crédito ganha destaque de cor; débito e zero ficam neutros.
-function corDoValor(valor: number) {
+export function corDoValor(valor: number) {
   return valor > 0 ? 'text-emerald-600' : 'text-foreground'
 }
 
@@ -143,7 +143,7 @@ function NavegacaoDia({ rotulo, podeVoltar, podeAvancar, onVoltar, onAvancar }: 
   )
 }
 
-function EstadoVazioConsumo({ nome }: { nome: string }) {
+export function EstadoVazioConsumo({ nome }: { nome: string }) {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-3 py-10 text-center">
       <span className="flex size-16 items-center justify-center rounded-full bg-muted text-muted-foreground">
@@ -343,14 +343,11 @@ export function ExtratoCliente({
   const clientesPorId = useMemo(() => new Map(clientes.map((c) => [c.id, c.nome])), [clientes])
   const saldoAtual = calcularSaldo(lancamentos, cliente.id)
   // Ao abrir a comanda, o dia selecionado deve ser sempre hoje — mesmo sem lançamento algum
-  // ainda hoje (histórico anterior existente ou cliente que nunca consumiu). Por isso, quando o
-  // último grupo real não é de hoje (ou não existe nenhum), um grupo vazio de hoje é injetado.
-  const grupos = useMemo(() => {
-    const base = agruparLancamentosPorDia(lancamentos)
-    const hojeChave = chaveDoDia(new Date().toISOString())
-    if (base[base.length - 1]?.data === hojeChave) return base
-    return [...base, { data: hojeChave, lancamentos: [], saldoAnterior: saldoAtual, saldoDoDia: saldoAtual }]
-  }, [lancamentos, saldoAtual])
+  // ainda hoje (histórico anterior existente ou cliente que nunca consumiu).
+  const grupos = useMemo(
+    () => agruparLancamentosPorDiaComHoje(lancamentos, saldoAtual),
+    [lancamentos, saldoAtual],
+  )
   const indiceUltimoDia = Math.max(grupos.length - 1, 0)
   const [indice, setIndice] = useState(indiceUltimoDia)
   const indiceAtual = Math.min(indice, indiceUltimoDia)

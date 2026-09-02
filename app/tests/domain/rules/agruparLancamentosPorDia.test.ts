@@ -1,5 +1,9 @@
-import { describe, expect, it } from 'vitest'
-import { agruparLancamentosPorDia, chaveDoDia } from '@/domain/rules/agruparLancamentosPorDia'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import {
+  agruparLancamentosPorDia,
+  agruparLancamentosPorDiaComHoje,
+  chaveDoDia,
+} from '@/domain/rules/agruparLancamentosPorDia'
 import type { LancamentoFinanceiro } from '@/domain/types/LancamentoFinanceiro'
 
 function criarLancamento(overrides: Partial<LancamentoFinanceiro> = {}): LancamentoFinanceiro {
@@ -60,6 +64,41 @@ describe('agruparLancamentosPorDia', () => {
     const grupos = agruparLancamentosPorDia([segundo, primeiro])
 
     expect(grupos[0].lancamentos.map((l) => l.descricao)).toEqual(['primeiro', 'segundo'])
+  })
+})
+
+describe('agruparLancamentosPorDiaComHoje', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-08-26T12:00:00.000'))
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('injeta um grupo vazio de hoje quando o último grupo real não é de hoje', () => {
+    const lancamentos = [criarLancamento({ valor: -10, criadoEm: '2026-08-25T10:00:00.000' })]
+
+    const grupos = agruparLancamentosPorDiaComHoje(lancamentos, -10)
+
+    expect(grupos).toHaveLength(2)
+    expect(grupos[1]).toEqual({ data: '2026-08-26', lancamentos: [], saldoAnterior: -10, saldoDoDia: -10 })
+  })
+
+  it('injeta um grupo vazio de hoje mesmo sem nenhum lançamento', () => {
+    const grupos = agruparLancamentosPorDiaComHoje([], 0)
+
+    expect(grupos).toEqual([{ data: '2026-08-26', lancamentos: [], saldoAnterior: 0, saldoDoDia: 0 }])
+  })
+
+  it('não injeta grupo extra quando já há lançamentos hoje', () => {
+    const lancamentos = [criarLancamento({ valor: -10, criadoEm: '2026-08-26T10:00:00.000' })]
+
+    const grupos = agruparLancamentosPorDiaComHoje(lancamentos, -10)
+
+    expect(grupos).toHaveLength(1)
+    expect(grupos[0].data).toBe('2026-08-26')
   })
 })
 
