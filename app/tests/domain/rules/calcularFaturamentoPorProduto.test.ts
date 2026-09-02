@@ -13,6 +13,9 @@ function criarLancamento(overrides: Partial<LancamentoFinanceiro> = {}): Lancame
     itemId: null,
     valor: 0,
     descricao: '',
+    observacao: null,
+    loteId: null,
+    estornaLancamentoId: null,
     criadoEm: new Date(0).toISOString(),
     ...overrides,
   }

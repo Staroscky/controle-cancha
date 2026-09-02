@@ -9,10 +9,10 @@ export function prepararEstornoLancamento(original: LancamentoFinanceiro): Lanca
     partidaId: original.partidaId,
     tipoId: original.tipoId,
     itemId: original.itemId,
-    loteId: original.loteId ?? null,
+    loteId: original.loteId,
     valor: -original.valor,
     descricao: `Estorno: ${original.descricao}`,
-    observacao: original.observacao ?? null,
+    observacao: original.observacao,
     estornaLancamentoId: original.id,
   }
 }

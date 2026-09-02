@@ -21,8 +21,6 @@ import {
   SheetTrigger,
 } from '@/ui/components/ui/sheet'
 
-type Origem = 'catalogo' | 'avulso'
-
 const SEM_CATEGORIA = 'Sem categoria'
 
 type ValoresIniciais = {
@@ -39,7 +37,7 @@ type LancarConsumoSheetProps = {
   grupos?: Grupo[]
   /** Agrupamento alternativo (ex.: por equipe/lado da partida). Quando informado, substitui o agrupamento por grupo. */
   blocos?: Bloco[]
-  onLancar: (descricao: string, valor: number, itemId: string | null, clienteIds: string[]) => void
+  onLancar: (descricao: string, valor: number, itemId: string, clienteIds: string[]) => void
   titulo?: string
   mensagemSemClientes?: string
   /** Modo controlado (ex.: correção de lançamento — seção 11.3 de docs/regras.md): quando informado,
@@ -72,8 +70,8 @@ export function LancarConsumoSheet({
   // pai abre o Sheet direto com open=true e não passa pelo abrir() abaixo (que só roda em
   // resposta a uma mudança de estado disparada pelo próprio Sheet, não pela prop `open` externa).
   // Quem usa o modo controlado deve remontar o componente (prop `key`) a cada novo alvo, senão
-  // esse valor inicial não muda entre uma correção e outra.
-  const [origem, setOrigem] = useState<Origem>(valoresIniciais && !valoresIniciais.itemId ? 'avulso' : 'catalogo')
+  // esse valor inicial não muda entre uma correção e outra. Quando o lançamento original é um
+  // avulso histórico (itemId nulo), o item começa vazio — o dono precisa escolher um do catálogo.
   const [itemId, setItemId] = useState(valoresIniciais?.itemId ?? '')
   const [descricao, setDescricao] = useState(valoresIniciais?.descricao ?? '')
   const [valor, setValor] = useState(valoresIniciais ? String(valoresIniciais.valor) : '')
@@ -82,7 +80,6 @@ export function LancarConsumoSheet({
 
   function abrir(novoAberto: boolean) {
     if (novoAberto) {
-      setOrigem(valoresIniciais && !valoresIniciais.itemId ? 'avulso' : 'catalogo')
       setItemId(valoresIniciais?.itemId ?? '')
       setDescricao(valoresIniciais?.descricao ?? '')
       setValor(valoresIniciais ? String(valoresIniciais.valor) : '')
@@ -91,13 +88,6 @@ export function LancarConsumoSheet({
     }
     if (controlado) onOpenChange?.(novoAberto)
     else setAbertoInterno(novoAberto)
-  }
-
-  function handleSelecionarOrigem(novaOrigem: Origem) {
-    setOrigem(novaOrigem)
-    setItemId('')
-    setDescricao('')
-    setValor('')
   }
 
   function handleSelecionarItem(id: string) {
@@ -126,8 +116,13 @@ export function LancarConsumoSheet({
   function handleConfirmar() {
     const valorNumerico = Number(valor)
 
+    if (!itemId) {
+      toast.error('Selecione um item do catálogo.')
+      return
+    }
+
     if (!descricao.trim() || Number.isNaN(valorNumerico) || valorNumerico <= 0) {
-      toast.error('Informe uma descrição e um valor válido (maior que zero).')
+      toast.error('Informe um valor válido (maior que zero).')
       return
     }
 
@@ -136,7 +131,7 @@ export function LancarConsumoSheet({
       return
     }
 
-    onLancar(descricao.trim(), valorNumerico, origem === 'catalogo' ? itemId || null : null, clienteIds)
+    onLancar(descricao.trim(), valorNumerico, itemId, clienteIds)
     toast.success(
       clienteIds.length === 1
         ? `${descricao.trim()} lançado para 1 cliente.`
@@ -193,55 +188,20 @@ export function LancarConsumoSheet({
         </SheetHeader>
         <div className="grid gap-4 px-4">
           <div className="grid gap-2">
-            <span className="text-sm font-medium">Item</span>
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant={origem === 'catalogo' ? 'default' : 'outline'}
-                onClick={() => handleSelecionarOrigem('catalogo')}
-                className="flex-1"
-              >
-                Do catálogo
-              </Button>
-              <Button
-                type="button"
-                variant={origem === 'avulso' ? 'default' : 'outline'}
-                onClick={() => handleSelecionarOrigem('avulso')}
-                className="flex-1"
-              >
-                Avulso
-              </Button>
-            </div>
+            <Label htmlFor="consumo-item-catalogo">Item do catálogo</Label>
+            <Combobox
+              id="consumo-item-catalogo"
+              value={itemId}
+              onValueChange={handleSelecionarItem}
+              options={opcoesItens}
+              placeholder="Selecione um item"
+              searchPlaceholder="Filtrar item..."
+              emptyText="Nenhum item encontrado."
+            />
+            {itens.length === 0 && (
+              <p className="text-xs text-muted-foreground">Nenhum item cadastrado no catálogo.</p>
+            )}
           </div>
-
-          {origem === 'catalogo' && (
-            <div className="grid gap-2">
-              <Label htmlFor="consumo-item-catalogo">Item do catálogo</Label>
-              <Combobox
-                id="consumo-item-catalogo"
-                value={itemId}
-                onValueChange={handleSelecionarItem}
-                options={opcoesItens}
-                placeholder="Selecione um item"
-                searchPlaceholder="Filtrar item..."
-                emptyText="Nenhum item encontrado."
-              />
-              {itens.length === 0 && (
-                <p className="text-xs text-muted-foreground">Nenhum item cadastrado no catálogo.</p>
-              )}
-            </div>
-          )}
-
-          {origem === 'avulso' && (
-            <div className="grid gap-2">
-              <Label htmlFor="consumo-descricao">Descrição</Label>
-              <Input
-                id="consumo-descricao"
-                value={descricao}
-                onChange={(e) => setDescricao(e.target.value)}
-              />
-            </div>
-          )}
 
           <div className="grid gap-2">
             <Label htmlFor="consumo-valor">Valor</Label>

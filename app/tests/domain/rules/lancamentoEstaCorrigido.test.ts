@@ -12,6 +12,9 @@ function criarLancamento(overrides: Partial<LancamentoFinanceiro>): LancamentoFi
     itemId: null,
     valor: 10,
     descricao: 'Pagamento',
+    observacao: null,
+    loteId: null,
+    estornaLancamentoId: null,
     criadoEm: '2026-08-31T12:00:00.000Z',
     ...overrides,
   }

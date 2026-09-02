@@ -6,10 +6,10 @@ export type LancamentoFinanceiro = {
   itemId: string | null
   valor: number
   descricao: string
-  observacao?: string | null
-  /** Correlaciona os N lançamentos de Consumo gerados por uma mesma divisão (rateio). */
-  loteId?: string | null
-  /** Preenchido só no lançamento de estorno: id do lançamento original que ele reverte. */
-  estornaLancamentoId?: string | null
+  observacao: string | null
+  /** Correlaciona os N lançamentos de Consumo gerados por uma mesma divisão (rateio). Nulo fora disso. */
+  loteId: string | null
+  /** Preenchido só no lançamento de estorno: id do lançamento original que ele reverte. Nulo nos demais. */
+  estornaLancamentoId: string | null
   criadoEm: string
 }

@@ -13,6 +13,7 @@ const ORIGINAL: LancamentoFinanceiro = {
   descricao: 'Cerveja',
   observacao: 'Valor original: R$ 30,00',
   loteId: 'lote-1',
+  estornaLancamentoId: null,
   criadoEm: '2026-08-31T12:00:00.000Z',
 }
 
@@ -41,7 +42,7 @@ describe('prepararEstornoLancamento', () => {
   })
 
   it('lançamento sem loteId/observacao gera estorno com loteId/observacao nulos', () => {
-    const semLote: LancamentoFinanceiro = { ...ORIGINAL, loteId: undefined, observacao: undefined }
+    const semLote: LancamentoFinanceiro = { ...ORIGINAL, loteId: null, observacao: null }
 
     const estorno = prepararEstornoLancamento(semLote)
 

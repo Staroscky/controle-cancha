@@ -19,5 +19,8 @@ export function prepararLancamentoUsoCredito(
     itemId: null,
     valor: -valor,
     descricao: descricao.trim() || 'Uso de crédito',
+    observacao: null,
+    loteId: null,
+    estornaLancamentoId: null,
   }
 }

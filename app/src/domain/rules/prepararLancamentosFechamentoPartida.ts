@@ -30,6 +30,8 @@ export function prepararLancamentosFechamentoPartida(
     valor: -valorPartidaPorCliente,
     descricao: 'Cobrança de derrota',
     observacao,
+    loteId: null,
+    estornaLancamentoId: null,
   }))
 
   const creditoPorVencedor = calcularCreditoVitoria(
@@ -48,6 +50,8 @@ export function prepararLancamentosFechamentoPartida(
           valor: creditoPorVencedor,
           descricao: 'Crédito de vitória',
           observacao,
+          loteId: null,
+          estornaLancamentoId: null,
         }))
       : []
 

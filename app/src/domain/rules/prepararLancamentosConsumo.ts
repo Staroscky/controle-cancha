@@ -32,5 +32,6 @@ export function prepararLancamentosConsumo(
     descricao,
     observacao,
     loteId: quantidade > 1 ? loteId : null,
+    estornaLancamentoId: null,
   }))
 }

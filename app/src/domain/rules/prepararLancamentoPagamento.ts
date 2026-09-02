@@ -18,5 +18,8 @@ export function prepararLancamentoPagamento(
     itemId: null,
     valor,
     descricao: descricao.trim() || 'Pagamento',
+    observacao: null,
+    loteId: null,
+    estornaLancamentoId: null,
   }
 }

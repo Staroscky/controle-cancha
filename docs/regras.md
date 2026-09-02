@@ -325,9 +325,9 @@ Independentemente de vitória ou derrota, qualquer cliente cujo consumo acumulad
 
 ## 10. Registro de consumo (com divisão entre clientes)
 
-### Catálogo de itens (opcional, para agilizar)
+### Catálogo de itens (obrigatório para lançar consumo)
 
-O dono pode cadastrar previamente os itens mais comuns numa tabela `itens_consumo` (nome + valor), tipo uma planilha de preços — assim, na hora de lançar, ele só seleciona o item da lista em vez de digitar tudo de novo. Também dá pra lançar um item avulso (digitando descrição e valor na hora) para o que não está cadastrado.
+O dono cadastra previamente os itens numa tabela `itens_consumo` (nome + valor), tipo uma planilha de preços. Todo lançamento de `Consumo` exige escolher um item dessa lista — não existe mais lançamento avulso (descrição + valor digitados na hora). Quando o item desejado não existe no catálogo, o dono precisa ir até a Aba Consumo e cadastrá-lo lá antes de lançar; não há atalho de cadastro rápido dentro do fluxo de lançamento.
 
 Itens do catálogo podem ser editados (nome e valor, já que os preços mudam com o tempo) ou removidos a qualquer momento. Editar ou remover um item do catálogo não altera lançamentos de consumo já feitos com ele — a descrição e o valor de cada lançamento são gravados no momento do lançamento, independentes do cadastro.
 
@@ -342,7 +342,7 @@ itens_consumo
 
 Ao registrar um item consumido, o dono do estabelecimento:
 
-1. Escolhe o item do catálogo (ou digita descrição + valor na hora, se for avulso).
+1. Escolhe o item do catálogo.
 2. Seleciona **quais clientes** estão dividindo aquele item.
 
 O sistema gera um lançamento em `lancamentos_financeiros` **por cliente selecionado**:
@@ -601,7 +601,7 @@ tipos_lancamento
 
 itens_consumo
 ├── id
-├── nome            → ex.: "Cerveja" (catálogo opcional, agiliza o lançamento)
+├── nome            → ex.: "Cerveja" (catálogo obrigatório para lançar consumo)
 └── valor           → valor sugerido, pode ser ajustado no lançamento
 
 configuracao_padrao
@@ -633,7 +633,8 @@ lancamentos_financeiros
 ├── cliente_id              → FK para clientes
 ├── partida_id              → FK para partidas (opcional — ver regra abaixo)
 ├── tipo_id                 → FK para tipos_lancamento
-├── item_id                 → FK para itens_consumo (opcional, só quando veio do catálogo)
+├── item_id                 → FK para itens_consumo (obrigatório em todo lançamento novo de Consumo;
+│                              nulo só em avulsos históricos lançados antes do catálogo virar obrigatório)
 ├── valor                   → positivo (crédito) ou negativo (débito)
 ├── descricao               → texto livre explicando o lançamento
 ├── lote_id                 → opcional; correlaciona os N lançamentos de Consumo de um mesmo
@@ -677,7 +678,7 @@ Por que separar assim:
 - `configuracao_padrao` guarda só os valores sugeridos para pré-preencher uma nova partida (ou conjunto). É só um ponto de partida — os valores que realmente valem ficam sempre copiados para dentro de `partidas`, então mudar o padrão depois não afeta partidas já criadas.
 - `equipes` evita repetir os nomes "Azul"/"Amarela" como texto solto em `participacoes` e `partidas` — se um dia mudar o nome ou adicionar outra equipe, é uma linha só.
 - `tipos_lancamento` faz o mesmo para a natureza do lançamento: em vez de comparar texto livre pra saber se é consumo ou resultado de partida, o sistema consulta pelo `tipo_id`. As 5 linhas são fixas: `Consumo`, `Crédito partida`, `Débito partida`, `Pagamento`, `Uso de crédito`.
-- `itens_consumo` é um catálogo opcional para agilizar o lançamento de consumo — não impede lançar um item avulso digitando na hora.
+- `itens_consumo` é o catálogo do qual todo lançamento de consumo obrigatoriamente escolhe um item — não existe mais lançamento avulso (descrição + valor digitados na hora).
 - `descricao` continua livre, mas agora só carrega o detalhe legível — o item consumido ("Cerveja", "1/3 Cerveja") ou o motivo do crédito/débito ("Crédito de vitória", "Cobrança de derrota"). A categorização confiável fica no `tipo_id`, não no texto.
 - `participacoes` guarda só o vínculo do cliente com a partida (equipe, lado, entrada/saída) — dados que existem uma vez por participação.
 - `lancamentos_financeiros` referencia diretamente `cliente_id` e `tipo_id`; `partida_id` é opcional para permitir consumo fora de partida (cliente que só ficou consumindo). Se `valor_partida_por_cliente` da partida for R$ 0, não há necessidade de gerar lançamentos de `Crédito partida`/`Débito partida` (o valor seria zero); da mesma forma, se `valor_minimo_consumacao` for R$ 0, o indicativo da seção 7 nunca aparece.
@@ -772,7 +773,7 @@ A interface é dividida em 4 abas. Essa divisão é uma sugestão de UX — não
 
 ### Aba Consumo
 
-- Fluxo de lançamento: escolher item (do catálogo `itens_consumo` ou avulso, com descrição e valor digitados na hora) e selecionar quais clientes dividem.
+- Fluxo de lançamento: escolher um item do catálogo `itens_consumo` e selecionar quais clientes dividem. Se o item desejado não existe no catálogo, é preciso cadastrá-lo primeiro na Aba Consumo (não há atalho de cadastro rápido dentro deste fluxo).
 - A lista de seleção só mostra clientes **presentes** (seção 3.1).
 - Gera um lançamento de `Consumo` por cliente selecionado, rateando o valor se for mais de um (seção 10).
 - O `partida_id` do lançamento é preenchido automaticamente se o cliente estiver ativo em alguma partida no momento; senão fica nulo (consumo fora de partida).

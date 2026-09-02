@@ -28,3 +28,5 @@ NN-nome-da-feature/
 | [02](02-partida/spec.md) | Partida | ✅ Concluído | seções 2–9, 14.1 (Aba Partida) |
 | [03](03-consumo/spec.md) | Consumo | ✅ Concluído | seção 10, 14.1 (Aba Consumo) |
 | [04](04-acerto/spec.md) | Comandas (Acerto) | ✅ Concluído | seções 11, 11.1, 13, 14.1 (Aba Comandas) |
+| [06](06-comanda-consolidacao/spec.md) | Comanda consolidada | 📝 Planejado | seções 10, 11.3, 13, 14.1 (Aba Comandas) |
+| [07](07-catalogo-obrigatorio/spec.md) | Catálogo obrigatório (remoção do avulso) | 📝 Planejado | seção 10, 11.3 (Aba Consumo) |

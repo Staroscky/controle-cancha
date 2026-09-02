@@ -41,6 +41,9 @@ function criarLancamentoConsumo(clienteId: string, partidaId: string, valorConsu
     itemId: null,
     valor: -valorConsumido,
     descricao: '',
+    observacao: null,
+    loteId: null,
+    estornaLancamentoId: null,
     criadoEm: new Date(0).toISOString(),
   }
 }
