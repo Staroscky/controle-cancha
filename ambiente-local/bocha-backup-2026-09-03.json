@@ -1,0 +1,560 @@
+{
+  "versao": 1,
+  "exportadoEm": "2026-09-04T01:44:48.675Z",
+  "dados": {
+    "bocha:itensConsumo": [
+      {
+        "id": "8067a71f-ac31-4755-b9cf-1347bf58e612",
+        "nome": "Heineken 600ml",
+        "valor": 18,
+        "categoriaId": "0efae91f-615c-4cf5-b279-bbbecec75280"
+      },
+      {
+        "id": "58928fc1-a99e-4683-a027-bd069e9b85c0",
+        "nome": "Heineken 330ml",
+        "valor": 12,
+        "categoriaId": "0efae91f-615c-4cf5-b279-bbbecec75280"
+      },
+      {
+        "id": "80b4875c-a60a-4a89-9c2c-50e7bf476503",
+        "nome": "Original 600ml",
+        "valor": 15,
+        "categoriaId": "0efae91f-615c-4cf5-b279-bbbecec75280"
+      },
+      {
+        "id": "ca3d5470-f59b-472b-9dc8-1353591c3598",
+        "nome": "Brahma Zero 350ml",
+        "valor": 6,
+        "categoriaId": "0efae91f-615c-4cf5-b279-bbbecec75280"
+      },
+      {
+        "id": "1dc2f9d4-dd51-4953-b273-7b69366681a4",
+        "nome": "Coca-Cola 350ml",
+        "valor": 6,
+        "categoriaId": "dd6a5738-d01e-4b7e-84c2-ce566b6645d0"
+      },
+      {
+        "id": "483cc638-b10e-404c-9bb0-c1e57d008552",
+        "nome": "Guaraná 350ml",
+        "valor": 6,
+        "categoriaId": "dd6a5738-d01e-4b7e-84c2-ce566b6645d0"
+      },
+      {
+        "id": "910de0b1-d7ca-4e29-8baf-f9e25630fd2f",
+        "nome": "Água mineral sem gás",
+        "valor": 5,
+        "categoriaId": "dd6a5738-d01e-4b7e-84c2-ce566b6645d0"
+      },
+      {
+        "id": "09ac536c-97d4-4696-ba7a-d1e4c4da6cc5",
+        "nome": "Água mineral com gás",
+        "valor": 5,
+        "categoriaId": "dd6a5738-d01e-4b7e-84c2-ce566b6645d0"
+      },
+      {
+        "id": "8905592f-0b41-4764-a7ad-9a43b178c36f",
+        "nome": "Campari",
+        "valor": 10,
+        "categoriaId": "61c09314-5d72-4e53-b5a3-e214f0eb655b"
+      },
+      {
+        "id": "9422d3d0-91a3-4ce0-b205-ff436acd2dd4",
+        "nome": "Porção de batata frita (Grande)",
+        "valor": 25,
+        "categoriaId": "64806b0e-deea-407f-b4f8-99147d125b0a"
+      },
+      {
+        "id": "2cdfa49f-5e1d-4241-90a2-ee4c54cbf049",
+        "nome": "X-Salada",
+        "valor": 20,
+        "categoriaId": "64806b0e-deea-407f-b4f8-99147d125b0a"
+      },
+      {
+        "id": "e4d797d8-a7cf-4428-99a0-23a78b8a3cba",
+        "nome": "Porção de frango",
+        "valor": 40,
+        "categoriaId": "64806b0e-deea-407f-b4f8-99147d125b0a"
+      },
+      {
+        "id": "37888e75-490c-4b2d-94f1-7df0154fee48",
+        "nome": "Ficha de sinuca",
+        "valor": 1,
+        "categoriaId": "edd0df8a-1da5-49d9-9967-115665cf02e4"
+      }
+    ],
+    "bocha:lancamentos": [
+      {
+        "clienteId": "eaad227e-b196-4524-88b1-b3be0accb5b2",
+        "partidaId": null,
+        "tipoId": "consumo",
+        "itemId": "ca3d5470-f59b-472b-9dc8-1353591c3598",
+        "valor": -6,
+        "descricao": "Brahma Zero 350ml",
+        "observacao": null,
+        "loteId": null,
+        "estornaLancamentoId": null,
+        "id": "7d2864c4-e4c9-4776-ac2a-a650689d02cb",
+        "criadoEm": "2026-09-04T01:44:07.274Z"
+      },
+      {
+        "clienteId": "eaad227e-b196-4524-88b1-b3be0accb5b2",
+        "partidaId": null,
+        "tipoId": "pagamento",
+        "itemId": null,
+        "valor": 3,
+        "descricao": "Pagamento",
+        "observacao": null,
+        "loteId": null,
+        "estornaLancamentoId": null,
+        "id": "71fdc31f-4996-4996-b1bd-8b3383ccc5e9",
+        "criadoEm": "2026-09-04T01:44:17.925Z"
+      },
+      {
+        "clienteId": "eaad227e-b196-4524-88b1-b3be0accb5b2",
+        "partidaId": null,
+        "tipoId": "consumo",
+        "itemId": "37888e75-490c-4b2d-94f1-7df0154fee48",
+        "valor": -1,
+        "descricao": "Ficha de sinuca",
+        "observacao": null,
+        "loteId": null,
+        "estornaLancamentoId": null,
+        "id": "0d326ec6-7994-4202-bf29-5b0bf62873cc",
+        "criadoEm": "2026-09-04T01:44:27.833Z"
+      }
+    ],
+    "bocha:clientes": [
+      {
+        "id": "9a5afcbc-065d-4849-9282-eb96d544d782",
+        "nome": "Alan Bauer",
+        "presente": false
+      },
+      {
+        "id": "a77ec06e-06ed-44cf-81e0-7fa9e82e5bca",
+        "nome": "Alice Dias Staroscky",
+        "presente": false
+      },
+      {
+        "id": "159d4204-899e-4169-936c-62a89a5a0214",
+        "nome": "Angelica Hames",
+        "presente": false
+      },
+      {
+        "id": "2d74d226-4690-4dba-ba4c-278cfd494c3b",
+        "nome": "Aryel Francisco Hames Kraus",
+        "presente": false
+      },
+      {
+        "id": "103b7d9e-ff6b-4615-823d-c84fea724ce5",
+        "nome": "Benjamin César Hames",
+        "presente": false
+      },
+      {
+        "id": "913bfdec-6831-449c-8f74-fe06856db5cc",
+        "nome": "Daniel Hames",
+        "presente": false
+      },
+      {
+        "id": "5573d0e2-3ea5-4ef7-b0a8-1b50bbae9a2f",
+        "nome": "Dariany Hames",
+        "presente": false
+      },
+      {
+        "id": "cce641af-4448-44bd-88de-ec0193c18265",
+        "nome": "Dinara Hames Schmitt",
+        "presente": false
+      },
+      {
+        "id": "eaad227e-b196-4524-88b1-b3be0accb5b2",
+        "nome": "Éderson Staroscky",
+        "presente": false
+      },
+      {
+        "id": "f63fc4c9-5f82-4b53-b163-14d01920c98e",
+        "nome": "Edson Staroschy",
+        "presente": false
+      },
+      {
+        "id": "4d9e069e-b25c-4d37-b94f-3764d611d68f",
+        "nome": "João Paulo Hames",
+        "presente": false
+      },
+      {
+        "id": "a5984d82-7f31-4db1-a0c8-31327a89eee9",
+        "nome": "Joel Dias",
+        "presente": false
+      },
+      {
+        "id": "4080cdce-c69c-49ae-ad26-a219d5e20079",
+        "nome": "Jonas Simão Dias",
+        "presente": false
+      },
+      {
+        "id": "64fe9d71-932a-4780-bfdf-094a1b4bf58a",
+        "nome": "Maurício Kraus",
+        "presente": false
+      },
+      {
+        "id": "a0e5c88f-c149-426f-9f56-6dccd64b9cfd",
+        "nome": "Valcir Schmitt",
+        "presente": false
+      }
+    ],
+    "bocha:categoriasConsumo": [
+      {
+        "id": "0efae91f-615c-4cf5-b279-bbbecec75280",
+        "nome": "Cervejas",
+        "icone": "beer"
+      },
+      {
+        "id": "dd6a5738-d01e-4b7e-84c2-ce566b6645d0",
+        "nome": "Refrigerantes e água",
+        "icone": "cupSoda"
+      },
+      {
+        "id": "61c09314-5d72-4e53-b5a3-e214f0eb655b",
+        "nome": "Drinks",
+        "icone": "martini"
+      },
+      {
+        "id": "64806b0e-deea-407f-b4f8-99147d125b0a",
+        "nome": "Lanches",
+        "icone": "utensilsCrossed"
+      },
+      {
+        "id": "edd0df8a-1da5-49d9-9967-115665cf02e4",
+        "nome": "Jogos",
+        "icone": "tag"
+      }
+    ],
+    "bocha:grupos": [],
+    "bocha:participacoes": [
+      {
+        "id": "3729cb9c-1929-4e83-9199-0070657101bf",
+        "clienteId": "eaad227e-b196-4524-88b1-b3be0accb5b2",
+        "partidaId": "ab84f012-5321-40c0-8096-a25adaa3744d",
+        "equipeId": "azul",
+        "lado": null,
+        "entrada": "2026-08-30T23:59:43.902Z",
+        "saida": null,
+        "status": "ativo"
+      },
+      {
+        "id": "e28d91c0-b394-4b79-be4e-5785c854d3a1",
+        "clienteId": "a77ec06e-06ed-44cf-81e0-7fa9e82e5bca",
+        "partidaId": "ab84f012-5321-40c0-8096-a25adaa3744d",
+        "equipeId": "azul",
+        "lado": null,
+        "entrada": "2026-08-30T23:59:47.041Z",
+        "saida": null,
+        "status": "ativo"
+      },
+      {
+        "id": "3bb57e6d-e1ed-485a-b53e-acb686af919a",
+        "clienteId": "f63fc4c9-5f82-4b53-b163-14d01920c98e",
+        "partidaId": "ab84f012-5321-40c0-8096-a25adaa3744d",
+        "equipeId": "azul",
+        "lado": null,
+        "entrada": "2026-08-30T23:59:49.980Z",
+        "saida": null,
+        "status": "ativo"
+      },
+      {
+        "id": "4721190a-2666-4751-8307-e2ef93c37254",
+        "clienteId": "4d9e069e-b25c-4d37-b94f-3764d611d68f",
+        "partidaId": "ab84f012-5321-40c0-8096-a25adaa3744d",
+        "equipeId": "azul",
+        "lado": null,
+        "entrada": "2026-08-31T00:02:31.527Z",
+        "saida": "2026-08-31T00:02:41.417Z",
+        "status": "saiu"
+      },
+      {
+        "id": "e850900d-c696-4aab-9fbe-e7ef571c1eee",
+        "clienteId": "a0e5c88f-c149-426f-9f56-6dccd64b9cfd",
+        "partidaId": "ab84f012-5321-40c0-8096-a25adaa3744d",
+        "equipeId": "azul",
+        "lado": null,
+        "entrada": "2026-08-31T00:02:31.527Z",
+        "saida": "2026-08-31T00:02:39.556Z",
+        "status": "saiu"
+      },
+      {
+        "id": "e207f577-bc6e-43a1-8aa9-6d2b630562b5",
+        "clienteId": "cce641af-4448-44bd-88de-ec0193c18265",
+        "partidaId": "ab84f012-5321-40c0-8096-a25adaa3744d",
+        "equipeId": "azul",
+        "lado": null,
+        "entrada": "2026-08-31T00:02:35.087Z",
+        "saida": "2026-08-31T00:02:37.760Z",
+        "status": "saiu"
+      },
+      {
+        "id": "1d7acdac-5286-4ca3-af5b-71b7c75cf68f",
+        "clienteId": "4d9e069e-b25c-4d37-b94f-3764d611d68f",
+        "partidaId": "ab84f012-5321-40c0-8096-a25adaa3744d",
+        "equipeId": "amarela",
+        "lado": null,
+        "entrada": "2026-08-31T00:02:47.238Z",
+        "saida": null,
+        "status": "ativo"
+      },
+      {
+        "id": "64714118-9639-44a5-abca-240117345c2d",
+        "clienteId": "a0e5c88f-c149-426f-9f56-6dccd64b9cfd",
+        "partidaId": "ab84f012-5321-40c0-8096-a25adaa3744d",
+        "equipeId": "amarela",
+        "lado": null,
+        "entrada": "2026-08-31T00:02:47.238Z",
+        "saida": null,
+        "status": "ativo"
+      },
+      {
+        "id": "e79ae3a8-201c-4631-a286-1eae79f747e0",
+        "clienteId": "cce641af-4448-44bd-88de-ec0193c18265",
+        "partidaId": "ab84f012-5321-40c0-8096-a25adaa3744d",
+        "equipeId": "amarela",
+        "lado": null,
+        "entrada": "2026-08-31T00:02:47.238Z",
+        "saida": null,
+        "status": "ativo"
+      },
+      {
+        "id": "e85f7c24-27bd-431d-8a50-b77aa0fc921a",
+        "clienteId": "eaad227e-b196-4524-88b1-b3be0accb5b2",
+        "partidaId": "91acd1e7-a153-4a3d-a6b2-ecb5a52f01c1",
+        "equipeId": "azul",
+        "lado": null,
+        "entrada": "2026-08-31T00:43:43.367Z",
+        "saida": null,
+        "status": "ativo"
+      },
+      {
+        "id": "11d12922-023e-4c56-b594-fe616f30cdd1",
+        "clienteId": "a77ec06e-06ed-44cf-81e0-7fa9e82e5bca",
+        "partidaId": "91acd1e7-a153-4a3d-a6b2-ecb5a52f01c1",
+        "equipeId": "azul",
+        "lado": null,
+        "entrada": "2026-08-31T00:43:43.367Z",
+        "saida": null,
+        "status": "ativo"
+      },
+      {
+        "id": "20c6ed49-6c56-4f2f-aa62-33ea420dd495",
+        "clienteId": "f63fc4c9-5f82-4b53-b163-14d01920c98e",
+        "partidaId": "91acd1e7-a153-4a3d-a6b2-ecb5a52f01c1",
+        "equipeId": "azul",
+        "lado": null,
+        "entrada": "2026-08-31T00:43:43.367Z",
+        "saida": null,
+        "status": "ativo"
+      },
+      {
+        "id": "63719ded-3869-4b32-a12e-0cd42d3f8dac",
+        "clienteId": "4d9e069e-b25c-4d37-b94f-3764d611d68f",
+        "partidaId": "91acd1e7-a153-4a3d-a6b2-ecb5a52f01c1",
+        "equipeId": "amarela",
+        "lado": null,
+        "entrada": "2026-08-31T00:43:47.929Z",
+        "saida": null,
+        "status": "ativo"
+      },
+      {
+        "id": "3cdd49ea-4e1f-4736-bc88-dc4f6198e54b",
+        "clienteId": "a0e5c88f-c149-426f-9f56-6dccd64b9cfd",
+        "partidaId": "91acd1e7-a153-4a3d-a6b2-ecb5a52f01c1",
+        "equipeId": "amarela",
+        "lado": null,
+        "entrada": "2026-08-31T00:43:47.929Z",
+        "saida": null,
+        "status": "ativo"
+      },
+      {
+        "id": "e326b65c-69f3-45ae-a8ef-e3e8e76a93cc",
+        "clienteId": "cce641af-4448-44bd-88de-ec0193c18265",
+        "partidaId": "91acd1e7-a153-4a3d-a6b2-ecb5a52f01c1",
+        "equipeId": "amarela",
+        "lado": null,
+        "entrada": "2026-08-31T00:43:47.929Z",
+        "saida": null,
+        "status": "ativo"
+      },
+      {
+        "id": "9efe96c1-8872-41ce-9d29-052be859adcb",
+        "clienteId": "eaad227e-b196-4524-88b1-b3be0accb5b2",
+        "partidaId": "b315a6d8-5c1f-4ee5-b31b-8edaeb8b3b27",
+        "equipeId": "azul",
+        "lado": null,
+        "entrada": "2026-08-31T00:44:07.408Z",
+        "saida": "2026-08-31T01:15:10.678Z",
+        "status": "saiu"
+      },
+      {
+        "id": "ee37c6fc-0e7e-45bf-9c55-1f76858a6123",
+        "clienteId": "a77ec06e-06ed-44cf-81e0-7fa9e82e5bca",
+        "partidaId": "b315a6d8-5c1f-4ee5-b31b-8edaeb8b3b27",
+        "equipeId": "azul",
+        "lado": null,
+        "entrada": "2026-08-31T00:44:07.408Z",
+        "saida": "2026-08-31T01:15:11.047Z",
+        "status": "saiu"
+      },
+      {
+        "id": "e42631cd-1a61-4281-a0ce-961ff3d2b9b6",
+        "clienteId": "f63fc4c9-5f82-4b53-b163-14d01920c98e",
+        "partidaId": "b315a6d8-5c1f-4ee5-b31b-8edaeb8b3b27",
+        "equipeId": "azul",
+        "lado": null,
+        "entrada": "2026-08-31T00:44:07.408Z",
+        "saida": "2026-08-31T23:57:47.984Z",
+        "status": "saiu"
+      },
+      {
+        "id": "319b1e7f-fa47-4ce6-b597-bd16473002b1",
+        "clienteId": "4d9e069e-b25c-4d37-b94f-3764d611d68f",
+        "partidaId": "b315a6d8-5c1f-4ee5-b31b-8edaeb8b3b27",
+        "equipeId": "amarela",
+        "lado": null,
+        "entrada": "2026-08-31T00:44:07.408Z",
+        "saida": "2026-08-31T23:57:48.443Z",
+        "status": "saiu"
+      },
+      {
+        "id": "3eef1b8c-dd91-49ab-bc10-57dcb79934d9",
+        "clienteId": "a0e5c88f-c149-426f-9f56-6dccd64b9cfd",
+        "partidaId": "b315a6d8-5c1f-4ee5-b31b-8edaeb8b3b27",
+        "equipeId": "amarela",
+        "lado": null,
+        "entrada": "2026-08-31T00:44:07.408Z",
+        "saida": "2026-08-31T23:57:48.856Z",
+        "status": "saiu"
+      },
+      {
+        "id": "9a13209f-761d-4abf-bb7c-3b28a5526a11",
+        "clienteId": "cce641af-4448-44bd-88de-ec0193c18265",
+        "partidaId": "b315a6d8-5c1f-4ee5-b31b-8edaeb8b3b27",
+        "equipeId": "amarela",
+        "lado": null,
+        "entrada": "2026-08-31T00:44:07.408Z",
+        "saida": "2026-08-31T23:57:49.797Z",
+        "status": "saiu"
+      },
+      {
+        "id": "998c5582-95ac-49aa-a11f-b694f6d7f84e",
+        "clienteId": "a77ec06e-06ed-44cf-81e0-7fa9e82e5bca",
+        "partidaId": "c86611d8-8fce-4973-9fa9-b1ff4b116209",
+        "equipeId": "azul",
+        "lado": null,
+        "entrada": "2026-09-01T00:33:00.946Z",
+        "saida": null,
+        "status": "ativo"
+      },
+      {
+        "id": "500929ee-34cb-46ed-87d6-3e696efec48a",
+        "clienteId": "f63fc4c9-5f82-4b53-b163-14d01920c98e",
+        "partidaId": "c86611d8-8fce-4973-9fa9-b1ff4b116209",
+        "equipeId": "amarela",
+        "lado": null,
+        "entrada": "2026-09-01T00:33:04.053Z",
+        "saida": null,
+        "status": "ativo"
+      },
+      {
+        "id": "e999957e-bc36-498c-a9c7-6f07fa1f6454",
+        "clienteId": "a77ec06e-06ed-44cf-81e0-7fa9e82e5bca",
+        "partidaId": "baeac907-4f53-4cc4-9980-57d456274410",
+        "equipeId": "azul",
+        "lado": null,
+        "entrada": "2026-09-01T00:53:58.927Z",
+        "saida": null,
+        "status": "ativo"
+      },
+      {
+        "id": "dc590c49-13be-49ba-bc5f-220c8b57dce7",
+        "clienteId": "f63fc4c9-5f82-4b53-b163-14d01920c98e",
+        "partidaId": "baeac907-4f53-4cc4-9980-57d456274410",
+        "equipeId": "amarela",
+        "lado": null,
+        "entrada": "2026-09-01T00:53:58.927Z",
+        "saida": null,
+        "status": "ativo"
+      },
+      {
+        "id": "be1ee6e0-239c-4a61-8bd7-7e2776d56f3f",
+        "clienteId": "eaad227e-b196-4524-88b1-b3be0accb5b2",
+        "partidaId": "baeac907-4f53-4cc4-9980-57d456274410",
+        "equipeId": "azul",
+        "lado": null,
+        "entrada": "2026-09-01T00:54:02.949Z",
+        "saida": null,
+        "status": "ativo"
+      },
+      {
+        "id": "65277d78-d436-4522-ad92-4418e300e562",
+        "clienteId": "a77ec06e-06ed-44cf-81e0-7fa9e82e5bca",
+        "partidaId": "899aeb86-372d-4091-9aec-7b1864da00cf",
+        "equipeId": "azul",
+        "lado": null,
+        "entrada": "2026-09-01T00:54:11.894Z",
+        "saida": null,
+        "status": "ativo"
+      },
+      {
+        "id": "f1b780f4-0009-4620-92b0-940cbb58df58",
+        "clienteId": "f63fc4c9-5f82-4b53-b163-14d01920c98e",
+        "partidaId": "899aeb86-372d-4091-9aec-7b1864da00cf",
+        "equipeId": "amarela",
+        "lado": null,
+        "entrada": "2026-09-01T00:54:11.894Z",
+        "saida": null,
+        "status": "ativo"
+      },
+      {
+        "id": "69689214-9830-4cae-8dd5-dc9de975f5b0",
+        "clienteId": "eaad227e-b196-4524-88b1-b3be0accb5b2",
+        "partidaId": "899aeb86-372d-4091-9aec-7b1864da00cf",
+        "equipeId": "azul",
+        "lado": null,
+        "entrada": "2026-09-01T00:54:11.894Z",
+        "saida": null,
+        "status": "ativo"
+      },
+      {
+        "id": "d307a740-3a8e-4d8e-969f-ec2d70b30f97",
+        "clienteId": "a77ec06e-06ed-44cf-81e0-7fa9e82e5bca",
+        "partidaId": "8d56aca6-9234-4d3a-8e1c-a312fef913ef",
+        "equipeId": "azul",
+        "lado": null,
+        "entrada": "2026-09-02T01:26:30.360Z",
+        "saida": null,
+        "status": "ativo"
+      },
+      {
+        "id": "cd3f85be-a5db-4133-aa7c-b66e83e0902c",
+        "clienteId": "f63fc4c9-5f82-4b53-b163-14d01920c98e",
+        "partidaId": "8d56aca6-9234-4d3a-8e1c-a312fef913ef",
+        "equipeId": "amarela",
+        "lado": null,
+        "entrada": "2026-09-02T01:26:30.360Z",
+        "saida": null,
+        "status": "ativo"
+      },
+      {
+        "id": "c567c747-2050-4ad1-8c8b-2c190d1e9b9d",
+        "clienteId": "eaad227e-b196-4524-88b1-b3be0accb5b2",
+        "partidaId": "8d56aca6-9234-4d3a-8e1c-a312fef913ef",
+        "equipeId": "azul",
+        "lado": null,
+        "entrada": "2026-09-02T01:26:30.360Z",
+        "saida": null,
+        "status": "ativo"
+      }
+    ],
+    "bocha:partidas": [],
+    "bocha:configuracaoPadrao": {
+      "id": "padrao",
+      "valorMinimoConsumacao": 0,
+      "valorPartidaPorCliente": 10
+    }
+  }
+}
