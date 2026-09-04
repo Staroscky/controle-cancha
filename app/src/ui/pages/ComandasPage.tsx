@@ -1,4 +1,4 @@
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, Clock, Eye, Receipt, Search, Users } from 'lucide-react'
 import { useState } from 'react'
 import { agruparClientesPorGrupo, type Bloco } from '@/domain/rules/agruparClientesPorGrupo'
 import { normalizarTextoBusca } from '@/domain/rules/normalizarTextoBusca'
@@ -68,13 +68,32 @@ export function ComandasPage() {
           <AjudaPagina
             titulo="Como funciona a aba Comandas"
             itens={[
-              'Aqui ficam as "contas" dos clientes presentes. Clientes agrupados na aba Clientes aparecem juntos, como uma família na mesma mesa.',
-              'Clique em uma comanda para abrir o extrato e o saldo — o saldo só aparece dentro do drawer, para preservar a privacidade de quem está por perto.',
-              'Em um grupo, a aba "Geral" fecha a conta de todos de uma vez, dividindo o valor pago entre quem deve mais e quem deve menos. Cada membro também tem sua própria aba para fechar só a conta dele.',
-              'Quem está com saldo positivo (crédito) pode usar parte dele para ajudar a pagar a dívida de outro membro do grupo, na aba "Geral".',
-              '"Outras pendências" mostra clientes que já saíram do estabelecimento mas ainda têm saldo em aberto.',
-              'Use "Lançar consumo" para registrar um item do catálogo e dividir entre os clientes selecionados.',
-              'É possível corrigir ou remover um lançamento errado a partir do extrato do cliente — o sistema nunca edita o lançamento original, ele gera um estorno e, se for o caso, um novo lançamento corrigido.',
+              {
+                icone: Users,
+                titulo: 'Comandas agrupadas',
+                descricao:
+                  'Aqui ficam as "contas" dos clientes presentes. Clientes agrupados na aba Clientes aparecem juntos, como uma família na mesma mesa.',
+              },
+              {
+                icone: Eye,
+                titulo: 'Saldo fica escondido',
+                descricao: 'O saldo só aparece dentro do drawer da comanda, pra preservar a privacidade de quem está por perto.',
+              },
+              {
+                icone: Clock,
+                titulo: 'Outras pendências',
+                descricao: 'Mostra clientes que já saíram do estabelecimento mas ainda têm saldo em aberto.',
+              },
+              {
+                icone: Receipt,
+                titulo: 'Lançar consumo',
+                descricao: 'Use o botão "Lançar consumo" pra registrar um item do catálogo e dividir entre os clientes selecionados.',
+              },
+              {
+                icone: Search,
+                titulo: 'Buscar comandas',
+                descricao: 'Filtre a lista por nome do cliente ou do grupo pra achar rápido numa lista grande.',
+              },
             ]}
           />
         </div>

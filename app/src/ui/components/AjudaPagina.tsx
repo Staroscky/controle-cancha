@@ -1,4 +1,4 @@
-import { HelpCircle } from 'lucide-react'
+import { HelpCircle, type LucideIcon } from 'lucide-react'
 import { Button } from '@/ui/components/ui/button'
 import {
   Dialog,
@@ -10,7 +10,13 @@ import {
   DialogTrigger,
 } from '@/ui/components/ui/dialog'
 
-export function AjudaPagina({ titulo, itens }: { titulo: string; itens: string[] }) {
+export type ItemAjuda = {
+  icone: LucideIcon
+  titulo: string
+  descricao: string
+}
+
+export function AjudaPagina({ titulo, itens }: { titulo: string; itens: ItemAjuda[] }) {
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -18,7 +24,7 @@ export function AjudaPagina({ titulo, itens }: { titulo: string; itens: string[]
           <HelpCircle className="size-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <div className="flex items-center gap-2">
             <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -28,16 +34,19 @@ export function AjudaPagina({ titulo, itens }: { titulo: string; itens: string[]
           </div>
         </DialogHeader>
 
-        <ol className="space-y-3">
-          {itens.map((item, indice) => (
-            <li key={indice} className="flex gap-3">
-              <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground">
-                {indice + 1}
-              </span>
-              <p className="pt-0.5 text-sm text-foreground/90">{item}</p>
-            </li>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {itens.map(({ icone: Icone, titulo: tituloItem, descricao }) => (
+            <div key={tituloItem} className="flex flex-col gap-2 rounded-lg border bg-muted/30 p-4">
+              <div className="flex items-center gap-2">
+                <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  <Icone className="size-5" />
+                </div>
+                <p className="text-sm font-semibold">{tituloItem}</p>
+              </div>
+              <p className="text-sm text-muted-foreground">{descricao}</p>
+            </div>
           ))}
-        </ol>
+        </div>
 
         <DialogFooter>
           <DialogClose asChild>

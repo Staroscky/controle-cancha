@@ -1,4 +1,4 @@
-import { Pencil, Trash2 } from 'lucide-react'
+import { ClipboardList, History, Pencil, Receipt, Tag, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import {
@@ -130,11 +130,33 @@ export function ConsumoPage() {
             <AjudaPagina
               titulo="Como funciona a aba Catálogo"
               itens={[
-                'Cadastre aqui os itens que os clientes podem consumir (ex.: Cerveja, Refrigerante) com o preço de cada um.',
-                'Só é possível lançar consumo de um item que já esteja cadastrado neste catálogo — não existe lançamento avulso digitado na hora.',
-                'Editar o nome ou valor de um item aqui não altera lançamentos já feitos anteriormente — cada lançamento guarda o valor da época em que foi feito.',
-                'Remover um item não afeta o histórico de consumo, só some da lista para novos lançamentos.',
-                'As categorias (ao lado) servem para organizar os itens (ex.: bebidas, petiscos) e aparecem nos filtros e nas estatísticas.',
+                {
+                  icone: Receipt,
+                  titulo: 'Cadastrar item',
+                  descricao: 'Cadastre aqui os itens que os clientes podem consumir (ex.: Cerveja, Refrigerante) com o preço de cada um.',
+                },
+                {
+                  icone: ClipboardList,
+                  titulo: 'Só itens do catálogo',
+                  descricao:
+                    'Só é possível lançar consumo de um item já cadastrado aqui — não existe lançamento avulso digitado na hora.',
+                },
+                {
+                  icone: History,
+                  titulo: 'Preço histórico',
+                  descricao:
+                    'Editar o nome ou valor de um item não altera lançamentos já feitos — cada lançamento guarda o valor da época em que foi lançado.',
+                },
+                {
+                  icone: Trash2,
+                  titulo: 'Remover item',
+                  descricao: 'Não afeta o histórico de consumo, só some da lista para novos lançamentos.',
+                },
+                {
+                  icone: Tag,
+                  titulo: 'Categorias',
+                  descricao: 'Servem para organizar os itens (ex.: bebidas, petiscos) e aparecem nos filtros e nas estatísticas.',
+                },
               ]}
             />
           </div>

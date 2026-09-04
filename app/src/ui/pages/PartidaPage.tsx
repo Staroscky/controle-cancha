@@ -1,3 +1,4 @@
+import { Banknote, LogOut, Settings2, TriangleAlert, Trophy, Users, XCircle } from 'lucide-react'
 import { listarCategoriasConsumoOrdenadas } from '@/data/categoriasConsumoRepo'
 import { listarClientes } from '@/data/clientesRepo'
 import { listarItensConsumoOrdenados } from '@/data/itensConsumoRepo'
@@ -55,13 +56,47 @@ export function PartidaPage() {
           <AjudaPagina
             titulo="Como funciona a aba Partida"
             itens={[
-              'Monte a partida colocando clientes presentes na equipe Azul ou Amarela (até 8 por equipe). Definir o lado (Cima/Baixo) é opcional.',
-              'O sistema não controla a pontuação do jogo — isso é combinado entre os clientes. O sistema só registra quem venceu ao final.',
-              'Entrar na partida não gera cobrança nenhuma. Um cliente pode sair durante o jogo sem prejuízo, mas aí ele não entra na divisão do resultado.',
-              'Ao concluir, escolha a equipe vencedora: cada perdedor ativo recebe uma cobrança e o valor total é dividido entre os vencedores ativos como crédito.',
-              'Se o jogo for abandonado sem vencedor, use "Desistência" — nenhuma cobrança ou crédito é gerado.',
-              '"Faltam R$ X para o mínimo" é só um indicativo somado entre as partidas do cliente no dia — não afeta o saldo dele, é apenas um alerta visual.',
-              'Use o botão "Configuração padrão" para definir os valores padrão (consumo mínimo e valor da partida) usados ao criar novas partidas.',
+              {
+                icone: Users,
+                titulo: 'Montar equipes',
+                descricao:
+                  'Coloque clientes presentes na equipe Azul ou Amarela (até 8 por equipe). Definir o lado (Cima/Baixo) é opcional.',
+              },
+              {
+                icone: Trophy,
+                titulo: 'Placar por fora',
+                descricao:
+                  'O sistema não controla a pontuação do jogo — isso é combinado entre os clientes. Ele só registra quem venceu ao final.',
+              },
+              {
+                icone: LogOut,
+                titulo: 'Sair durante o jogo',
+                descricao:
+                  'Entrar na partida não gera cobrança nenhuma. Quem sai antes do fim não entra na divisão do resultado.',
+              },
+              {
+                icone: Banknote,
+                titulo: 'Concluir a partida',
+                descricao:
+                  'Ao concluir, escolha a equipe vencedora: cada perdedor ativo recebe uma cobrança e o valor total é dividido entre os vencedores ativos como crédito.',
+              },
+              {
+                icone: XCircle,
+                titulo: 'Desistência',
+                descricao: 'Se o jogo for abandonado sem vencedor, use "Desistência" — nenhuma cobrança ou crédito é gerado.',
+              },
+              {
+                icone: TriangleAlert,
+                titulo: 'Indicador de consumo mínimo',
+                descricao:
+                  '"Faltam R$ X para o mínimo" é só um alerta visual somado entre as partidas do dia — não afeta o saldo do cliente.',
+              },
+              {
+                icone: Settings2,
+                titulo: 'Configuração padrão',
+                descricao:
+                  'Use o botão "Configuração padrão" pra definir os valores padrão (consumo mínimo e valor da partida) usados ao criar novas partidas.',
+              },
             ]}
           />
         </div>

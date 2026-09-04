@@ -1,3 +1,4 @@
+import { Banknote, BarChart3, CalendarRange, Gauge } from 'lucide-react'
 import { AjudaPagina } from '@/ui/components/AjudaPagina'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/ui/components/ui/card'
 import { Tabs, TabsList, TabsTrigger } from '@/ui/components/ui/tabs'
@@ -53,10 +54,28 @@ export function EstatisticasPage() {
         <AjudaPagina
           titulo="Como funciona a aba Estatísticas"
           itens={[
-            'Escolha o período (Hoje, 7 dias, 30 dias ou Tudo) para ver os números daquele intervalo.',
-            '"Faturamento de consumo" soma tudo o que foi vendido no período (já descontando estornos). "Recebido em caixa" soma só os pagamentos registrados.',
-            '"Ticket médio" é o faturamento de consumo dividido pela quantidade de vendas no período.',
-            '"Mais vendidos" e "Faturamento por categoria" mostram um ranking dos itens e categorias que mais venderam no período selecionado.',
+            {
+              icone: CalendarRange,
+              titulo: 'Escolher período',
+              descricao: 'Escolha Hoje, 7 dias, 30 dias ou Tudo para ver os números daquele intervalo.',
+            },
+            {
+              icone: Banknote,
+              titulo: 'Faturamento vs. caixa',
+              descricao:
+                '"Faturamento de consumo" soma tudo o que foi vendido no período (líquido de estornos). "Recebido em caixa" soma só os pagamentos registrados.',
+            },
+            {
+              icone: Gauge,
+              titulo: 'Ticket médio',
+              descricao: 'É o faturamento de consumo dividido pela quantidade de vendas no período.',
+            },
+            {
+              icone: BarChart3,
+              titulo: 'Rankings',
+              descricao:
+                '"Mais vendidos" e "Faturamento por categoria" mostram o ranking dos itens e categorias que mais venderam no período selecionado.',
+            },
           ]}
         />
       </div>

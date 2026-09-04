@@ -1,4 +1,4 @@
-import { Download, Upload } from 'lucide-react'
+import { Download, HardDrive, RefreshCw, Upload } from 'lucide-react'
 import type { ChangeEvent } from 'react'
 import { useRef, useState } from 'react'
 import { toast } from 'sonner'
@@ -67,10 +67,28 @@ export function BackupPage() {
         <AjudaPagina
           titulo="Como funciona a aba Dados"
           itens={[
-            'Todos os dados (clientes, partidas, comandas, catálogo, configurações) ficam salvos só neste dispositivo/navegador, não em um servidor.',
-            '"Exportar backup" baixa um arquivo com uma cópia de tudo. Guarde esse arquivo em um lugar seguro (ex.: e-mail, nuvem) periodicamente.',
-            '"Importar backup" substitui TODOS os dados atuais deste dispositivo pelos dados do arquivo escolhido. Essa ação não pode ser desfeita, por isso o sistema pede confirmação antes.',
-            'Use a importação para restaurar um backup antigo ou para transferir os dados para outro computador/celular.',
+            {
+              icone: HardDrive,
+              titulo: 'Dados só no dispositivo',
+              descricao:
+                'Tudo (clientes, partidas, comandas, catálogo, configurações) fica salvo só neste dispositivo/navegador, não em um servidor.',
+            },
+            {
+              icone: Download,
+              titulo: 'Exportar backup',
+              descricao: 'Baixa um arquivo com uma cópia de tudo. Guarde esse arquivo em um lugar seguro (ex.: e-mail, nuvem) periodicamente.',
+            },
+            {
+              icone: Upload,
+              titulo: 'Importar backup',
+              descricao:
+                'Substitui TODOS os dados atuais deste dispositivo pelos dados do arquivo escolhido. Essa ação não pode ser desfeita, por isso o sistema pede confirmação antes.',
+            },
+            {
+              icone: RefreshCw,
+              titulo: 'Restaurar ou transferir',
+              descricao: 'Use a importação para restaurar um backup antigo ou para transferir os dados para outro computador/celular.',
+            },
           ]}
         />
       </div>

@@ -1,4 +1,4 @@
-import { Eraser, MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
+import { Eraser, Link2, LogIn, LogOut, MoreHorizontal, Pencil, Trash2, UserCheck, UserPlus } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { normalizarTextoBusca } from '@/domain/rules/normalizarTextoBusca'
@@ -163,12 +163,39 @@ export function ClientesPage() {
           <AjudaPagina
             titulo="Como funciona a aba Clientes"
             itens={[
-              'Cadastre aqui todos os clientes do estabelecimento. O nome precisa ser único (não dá pra cadastrar dois clientes com o mesmo nome).',
-              '"Marcar chegada" indica que o cliente está no local agora — isso não gera nenhuma cobrança, é só um controle de presença.',
-              'Só clientes marcados como presentes aparecem para escolha nas abas Partida e Comandas.',
-              'Arraste um cliente sobre outro no quadro da direita para agrupar (ex.: uma família na mesma mesa). O grupo aparece junto na aba Comandas.',
-              '"Marcar saída" pode ser feita mesmo com saldo pendente — o saldo continua registrado e pode ser acertado depois na aba Comandas.',
-              '"Limpar histórico" apaga o extrato financeiro do cliente (consumo, pagamentos, partidas). Só é permitido quando o saldo dele está zerado.',
+              {
+                icone: UserPlus,
+                titulo: 'Cadastrar cliente',
+                descricao: 'O nome precisa ser único — não dá pra cadastrar dois clientes com o mesmo nome.',
+              },
+              {
+                icone: LogIn,
+                titulo: 'Marcar chegada',
+                descricao: 'Indica que o cliente está no local agora. Não gera nenhuma cobrança, é só um controle de presença.',
+              },
+              {
+                icone: UserCheck,
+                titulo: 'Somente presentes',
+                descricao: 'Só clientes marcados como presentes aparecem para escolha nas abas Partida e Comandas.',
+              },
+              {
+                icone: Link2,
+                titulo: 'Agrupar clientes',
+                descricao:
+                  'Arraste um cliente sobre outro no quadro da direita pra formar um grupo (ex.: uma família na mesma mesa). O grupo aparece junto na aba Comandas.',
+              },
+              {
+                icone: LogOut,
+                titulo: 'Marcar saída',
+                descricao:
+                  'Pode ser feita mesmo com saldo pendente — o saldo continua registrado e pode ser acertado depois na aba Comandas.',
+              },
+              {
+                icone: Eraser,
+                titulo: 'Limpar histórico',
+                descricao:
+                  'Apaga o extrato financeiro do cliente (consumo, pagamentos, partidas). Só é permitido quando o saldo dele está zerado.',
+              },
             ]}
           />
         </div>

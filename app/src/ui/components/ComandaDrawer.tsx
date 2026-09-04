@@ -11,6 +11,7 @@ import type { Grupo } from '@/domain/types/Grupo'
 import type { ItemConsumo } from '@/domain/types/ItemConsumo'
 import type { LancamentoFinanceiro } from '@/domain/types/LancamentoFinanceiro'
 import { TIPO_LANCAMENTO_IDS } from '@/domain/types/TipoLancamento'
+import { AjudaComanda } from '@/ui/components/AjudaComanda'
 import { ComandaConsolidada } from '@/ui/components/ComandaConsolidada'
 import { CorrigirPagamentoSheet } from '@/ui/components/CorrigirPagamentoSheet'
 import { ExtratoCliente } from '@/ui/components/ExtratoCliente'
@@ -412,7 +413,10 @@ export function ComandaDrawer({
     <Sheet open={!!bloco} onOpenChange={(aberto) => !aberto && onFechar()}>
       <SheetContent className="flex w-full flex-col sm:max-w-xl">
         <SheetHeader>
-          <SheetTitle>{titulo}</SheetTitle>
+          <div className="flex items-center gap-1">
+            <SheetTitle>{titulo}</SheetTitle>
+            <AjudaComanda />
+          </div>
           {blocoAtual.grupoId && (
             <SheetDescription>{blocoAtual.membros.map((m) => m.nome).join(', ')}</SheetDescription>
           )}
