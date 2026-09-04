@@ -40,6 +40,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/ui/components/ui/table'
+import { AjudaPagina } from '@/ui/components/AjudaPagina'
 import { QuadroPresenca } from '@/ui/components/QuadroPresenca'
 import { useClientes } from '@/ui/hooks/useClientes'
 
@@ -157,7 +158,20 @@ export function ClientesPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Clientes</h2>
+        <div className="flex items-center gap-1">
+          <h2 className="text-lg font-semibold">Clientes</h2>
+          <AjudaPagina
+            titulo="Como funciona a aba Clientes"
+            itens={[
+              'Cadastre aqui todos os clientes do estabelecimento. O nome precisa ser único (não dá pra cadastrar dois clientes com o mesmo nome).',
+              '"Marcar chegada" indica que o cliente está no local agora — isso não gera nenhuma cobrança, é só um controle de presença.',
+              'Só clientes marcados como presentes aparecem para escolha nas abas Partida e Comandas.',
+              'Arraste um cliente sobre outro no quadro da direita para agrupar (ex.: uma família na mesma mesa). O grupo aparece junto na aba Comandas.',
+              '"Marcar saída" pode ser feita mesmo com saldo pendente — o saldo continua registrado e pode ser acertado depois na aba Comandas.',
+              '"Limpar histórico" apaga o extrato financeiro do cliente (consumo, pagamentos, partidas). Só é permitido quando o saldo dele está zerado.',
+            ]}
+          />
+        </div>
         <div className="flex items-center gap-2">
           <Button
             variant="outline"

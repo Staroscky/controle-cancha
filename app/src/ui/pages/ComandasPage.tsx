@@ -2,6 +2,7 @@ import { ChevronDown } from 'lucide-react'
 import { useState } from 'react'
 import { agruparClientesPorGrupo, type Bloco } from '@/domain/rules/agruparClientesPorGrupo'
 import { normalizarTextoBusca } from '@/domain/rules/normalizarTextoBusca'
+import { AjudaPagina } from '@/ui/components/AjudaPagina'
 import { ComandaBloco } from '@/ui/components/ComandaBloco'
 import { ComandaDrawer } from '@/ui/components/ComandaDrawer'
 import { LancarConsumoSheet } from '@/ui/components/LancarConsumoSheet'
@@ -62,7 +63,21 @@ export function ComandasPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Comandas</h2>
+        <div className="flex items-center gap-1">
+          <h2 className="text-lg font-semibold">Comandas</h2>
+          <AjudaPagina
+            titulo="Como funciona a aba Comandas"
+            itens={[
+              'Aqui ficam as "contas" dos clientes presentes. Clientes agrupados na aba Clientes aparecem juntos, como uma família na mesma mesa.',
+              'Clique em uma comanda para abrir o extrato e o saldo — o saldo só aparece dentro do drawer, para preservar a privacidade de quem está por perto.',
+              'Em um grupo, a aba "Geral" fecha a conta de todos de uma vez, dividindo o valor pago entre quem deve mais e quem deve menos. Cada membro também tem sua própria aba para fechar só a conta dele.',
+              'Quem está com saldo positivo (crédito) pode usar parte dele para ajudar a pagar a dívida de outro membro do grupo, na aba "Geral".',
+              '"Outras pendências" mostra clientes que já saíram do estabelecimento mas ainda têm saldo em aberto.',
+              'Use "Lançar consumo" para registrar um item do catálogo e dividir entre os clientes selecionados.',
+              'É possível corrigir ou remover um lançamento errado a partir do extrato do cliente — o sistema nunca edita o lançamento original, ele gera um estorno e, se for o caso, um novo lançamento corrigido.',
+            ]}
+          />
+        </div>
         {presentes.length > 0 && (
           <LancarConsumoSheet
             itens={itensConsumo}

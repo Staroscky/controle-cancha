@@ -24,6 +24,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/ui/components/ui/table'
+import { AjudaPagina } from '@/ui/components/AjudaPagina'
 import { CategoriaIcon, IconeCategoriaPicker } from '@/ui/components/CategoriaIcon'
 import { NovaCategoriaConsumoSheet } from '@/ui/components/NovaCategoriaConsumoSheet'
 import { NovoItemConsumoSheet } from '@/ui/components/NovoItemConsumoSheet'
@@ -124,7 +125,19 @@ export function ConsumoPage() {
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Catálogo de itens</h2>
+          <div className="flex items-center gap-1">
+            <h2 className="text-lg font-semibold">Catálogo de itens</h2>
+            <AjudaPagina
+              titulo="Como funciona a aba Catálogo"
+              itens={[
+                'Cadastre aqui os itens que os clientes podem consumir (ex.: Cerveja, Refrigerante) com o preço de cada um.',
+                'Só é possível lançar consumo de um item que já esteja cadastrado neste catálogo — não existe lançamento avulso digitado na hora.',
+                'Editar o nome ou valor de um item aqui não altera lançamentos já feitos anteriormente — cada lançamento guarda o valor da época em que foi feito.',
+                'Remover um item não afeta o histórico de consumo, só some da lista para novos lançamentos.',
+                'As categorias (ao lado) servem para organizar os itens (ex.: bebidas, petiscos) e aparecem nos filtros e nas estatísticas.',
+              ]}
+            />
+          </div>
           <NovoItemConsumoSheet categorias={categorias} onCadastrar={cadastrarItem} />
         </div>
 

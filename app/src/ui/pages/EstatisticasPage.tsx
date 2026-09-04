@@ -1,3 +1,4 @@
+import { AjudaPagina } from '@/ui/components/AjudaPagina'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/ui/components/ui/card'
 import { Tabs, TabsList, TabsTrigger } from '@/ui/components/ui/tabs'
 import { useEstatisticas } from '@/ui/hooks/useEstatisticas'
@@ -47,6 +48,18 @@ export function EstatisticasPage() {
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center gap-1">
+        <h2 className="text-lg font-semibold">Estatísticas</h2>
+        <AjudaPagina
+          titulo="Como funciona a aba Estatísticas"
+          itens={[
+            'Escolha o período (Hoje, 7 dias, 30 dias ou Tudo) para ver os números daquele intervalo.',
+            '"Faturamento de consumo" soma tudo o que foi vendido no período (já descontando estornos). "Recebido em caixa" soma só os pagamentos registrados.',
+            '"Ticket médio" é o faturamento de consumo dividido pela quantidade de vendas no período.',
+            '"Mais vendidos" e "Faturamento por categoria" mostram um ranking dos itens e categorias que mais venderam no período selecionado.',
+          ]}
+        />
+      </div>
       <Tabs value={periodo} onValueChange={(v) => setPeriodo(v as PeriodoEstatisticas)}>
         <TabsList>
           {OPCOES_PERIODO.map((opcao) => (
